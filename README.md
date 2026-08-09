@@ -8,6 +8,7 @@ Run the backend API:
 
 ```powershell
 cd backend
+$env:ADMIN_PASSWORD = "change-me"
 bun server.ts
 ```
 
@@ -27,8 +28,16 @@ Open `http://localhost:3000`.
 docker compose up --build
 ```
 
+Set `ADMIN_PASSWORD` before running Compose for a non-default admin password:
+
+```powershell
+$env:ADMIN_PASSWORD = "change-me"
+docker compose up --build
+```
+
 Services:
 
 - `frontend`: Bun static server on `localhost:3000`
 - `backend`: Bun API server on internal port `3001`
 - `database`: Alpine SQLite holder sharing the `sqlite-data` volume
+- Admin UI: `http://localhost:3000/admin`

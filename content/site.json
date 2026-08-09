@@ -1,0 +1,21 @@
+{
+  "name": "Nisarga Adhikary",
+  "subtitle": "AI/ML Engineer & Systems Enthusiat",
+  "avatar": "/pfp.jpg",
+  "location": "New Delhi, India",
+  "timezone": "Asia/Kolkata",
+  "bio": [
+    "Hi, I'm a 19 year old software engineer, cybersecurity researcher, CTF player, and curious mind deeply interested in open-source, cybersecurity, and digital investigations. I build things for fun (and sometimes they are actually useful).",
+    "Outside of studying, I'm usually writing code, exploring security challenges, watching anime, reading, listening to music, or taking photos. I've worked at startups and non-profits, and most of my projects are available on <a href=\"https://github.com/ni5arga\" target=\"_blank\">GitHub</a>. Currently balancing academics, programming, and whatever else catches my interest. My security research has been featured in national & international media outlets like <a href=\"/press/\" target=\"_blank\">BBC</a>, <a href=\"/press/\" target=\"_blank\">Bloomberg</a>, <a href=\"/press/\" target=\"_blank\">India Today</a> & <a href=\"/press/\" target=\"_blank\">multiple others</a>.",
+    "I'm open to new roles, collaborations, and opportunities. You can see my <a href=\"/resume.pdf\" target=\"_blank\">resume</a> or reach out at <a href=\"mailto:hello@ni5arga.com\">hello@ni5arga.com</a>.",
+    "If you're here, chances are I'd enjoy talking to you - I get nerd-sniped easily, and an email about something that recently fascinated you would honestly make my day."
+  ],
+  "links": {
+    "blog": "/blog/",
+    "press": "/press/",
+    "github": "https://github.com/ni5arga",
+    "twitter": "https://twitter.com/ni5arga",
+    "email": "hello@ni5arga.com",
+    "resume": "/resume.pdf"
+  }
+}

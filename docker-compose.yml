@@ -15,8 +15,13 @@ services:
     environment:
       PORT: 3001
       SQLITE_PATH: /data/site.sqlite
+      CONTENT_DIR: /content
+      PUBLIC_DIR: /public
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
     volumes:
       - sqlite-data:/data
+      - ./content:/content
+      - ./frontend/public:/public
     depends_on:
       - database
 

@@ -26,6 +26,8 @@ const types: Record<string, string> = {
   ".xml": "application/xml; charset=utf-8",
 };
 
+const backendUrl = process.env.API_URL ?? "http://localhost:3001";
+
 function contentType(path: string) {
   const dot = path.lastIndexOf(".");
   return dot === -1 ? "application/octet-stream" : types[path.slice(dot)] ?? "application/octet-stream";
@@ -36,9 +38,30 @@ Bun.serve({
   async fetch(req) {
     const url = new URL(req.url);
 
-    if (url.pathname === "/api/visits") {
-      return fetch(`${process.env.API_URL ?? "http://localhost:3001"}/api/visits`, {
+    if (url.pathname === "/admin" || url.pathname === "/admin/") {
+      return new Response(null, { status: 302, headers: { location: "/admin/home" } });
+    }
+
+    if (url.pathname === "/admin/posts") {
+      return new Response(null, { status: 302, headers: { location: "/admin/post" } });
+    }
+
+    if (
+      url.pathname === "/" ||
+      url.pathname.startsWith("/admin/") ||
+      url.pathname === "/blog/" ||
+      url.pathname.startsWith("/blog/posts/") ||
+      url.pathname.startsWith("/api/admin/")
+    ) {
+      const init: RequestInit = {
         method: req.method,
+        headers: req.headers,
+      };
+      if (req.method !== "GET" && req.method !== "HEAD") {
+        init.body = req.body;
+      }
+      return fetch(`${backendUrl}${url.pathname}${url.search}`, {
+        ...init,
       });
     }
 
