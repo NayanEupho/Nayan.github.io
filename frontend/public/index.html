@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ni5arga - Nisarga Adhikary</title>
+    <meta name="description" content="Nisarga Adhikary - Software Engineer & Cybersecurity Researcher">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="/styles.css">
+    <script>
+        (function () {
+            var saved = localStorage.getItem("theme") || "dark";
+            document.documentElement.setAttribute("data-theme", saved);
+        })();
+    </script>
+</head>
+<body class="home-page">
+    <div class="bg-canvas">
+        <div class="bg-blob bg-blob-1"></div>
+        <div class="bg-blob bg-blob-2"></div>
+        <div class="bg-grain"></div>
+    </div>
+
+    <button class="theme-toggle" aria-label="Toggle theme">
+        <svg class="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+    </button>
+
+    <main class="hero">
+        <div class="hero-content">
+            <img src="/pfp.jpg" alt="Nisarga Adhikary" class="avatar">
+
+            <h1 class="hero-name">Nisarga Adhikary</h1>
+            <p class="hero-aka"> software engineer & cybersecurity researcher</p>
+
+            <p class="hero-bio">
+                Hi, I'm a 19 year old software engineer, cybersecurity researcher, CTF player, and curious mind deeply interested in open-source, cybersecurity, and
+                digital investigations. I build things for fun (and sometimes they are actually useful).
+            </p>
+
+            <p class="hero-bio">
+                Outside of studying, I'm usually writing code, exploring security challenges, watching anime, reading,
+                listening to music, or taking photos. I've worked at startups and non-profits, and most of my projects
+                are available on <a href="https://github.com/ni5arga" target="_blank">GitHub</a>. Currently balancing
+                academics, programming, and whatever else catches my interest. My security research has been featured in national & international media outlets like <a href="/press/" target="_blank">BBC</a>, <a href="/press/" target="_blank">Bloomberg</a>, <a href="/press/" target="_blank">India Today</a> & <a href="/press/" target="_blank">multiple others</a>.
+            </p>
+
+            <p class="hero-bio">
+                I'm open to new roles, collaborations, and opportunities. You can see my <a href="/resume.pdf" target="_blank">resume</a> or reach out at
+                <a href="mailto:hello@ni5arga.com">hello@ni5arga.com</a>.
+            </p>
+
+            <p class="hero-bio">
+                If you're here, chances are I'd enjoy talking to you - I get nerd-sniped easily, and an email about something that recently fascinated you would honestly make my day.
+            </p>
+
+            <div class="hero-links">
+                <a href="/blog/">blog</a>
+                <a href="/press/">press</a>
+                <a href="https://github.com/ni5arga" target="_blank">github</a>
+                <a href="https://twitter.com/ni5arga" target="_blank">twitter</a>
+                <a href="mailto:hello@ni5arga.com">email</a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="home-footer">
+        <span class="footer-location">New Delhi, India</span>
+        <span class="footer-dot"></span>
+        <span class="footer-time" id="localTime"></span>
+        <span class="footer-dot"></span>
+        <span class="visitor-count" data-visits></span>
+    </footer>
+
+    <script src="/site.js"></script>
+</body>
+</html>

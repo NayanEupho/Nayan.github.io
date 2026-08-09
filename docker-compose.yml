@@ -1,0 +1,29 @@
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      API_URL: http://backend:3001
+    depends_on:
+      - backend
+
+  backend:
+    build: ./backend
+    expose:
+      - "3001"
+    environment:
+      PORT: 3001
+      SQLITE_PATH: /data/site.sqlite
+    volumes:
+      - sqlite-data:/data
+    depends_on:
+      - database
+
+  database:
+    build: ./db
+    volumes:
+      - sqlite-data:/data
+
+volumes:
+  sqlite-data:
