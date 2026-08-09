@@ -158,7 +158,7 @@ function imagePlaceholderSrc(src: string, slug: string) {
     return cleanSrc;
   }
   if (cleanSrc.includes(":")) return cleanSrc;
-  return `/blog/posts/${slug}/assets/${cleanSrc.replace(/^\.?\/?assets\//, "")}`;
+  return `/blog/post/${slug}/assets/${cleanSrc.replace(/^\.?\/?assets\//, "")}`;
 }
 
 function downloadableMarkdownFile(post: PostMeta & { markdown: string }) {
@@ -208,7 +208,7 @@ async function writePost(input: PostMeta & { markdown: string }) {
   const slug = safeSlug(input.slug || input.title);
   const meta = { ...input, slug, published: Boolean(input.published) };
   const dir = join(blogDir, slug);
-  const publicPostDir = join(publicDir, "blog", "posts", slug);
+  const publicPostDir = join(publicDir, "blog", "post", slug);
   await mkdir(join(dir, "assets"), { recursive: true });
   await writeFile(join(dir, "index.md"), markdownFile({ ...meta, markdown: input.markdown }), "utf8");
   const rendered = renderPost({ ...meta, markdown: input.markdown, html: markdownToHtml(input.markdown, slug) });
@@ -229,6 +229,7 @@ async function updatePost(oldSlug: string, input: PostMeta & { markdown: string 
   const next = safeSlug(input.slug || input.title);
   if (previous !== next) {
     await rm(join(blogDir, previous), { recursive: true, force: true });
+    await rm(join(publicDir, "blog", "post", previous), { recursive: true, force: true });
     await rm(join(publicDir, "blog", "posts", previous), { recursive: true, force: true });
   }
   return writePost({ ...input, slug: next });
@@ -237,6 +238,7 @@ async function updatePost(oldSlug: string, input: PostMeta & { markdown: string 
 async function deletePost(slug: string) {
   const safe = safeSlug(slug);
   await rm(join(blogDir, safe), { recursive: true, force: true });
+  await rm(join(publicDir, "blog", "post", safe), { recursive: true, force: true });
   await rm(join(publicDir, "blog", "posts", safe), { recursive: true, force: true });
   await mkdir(join(publicDir, "blog"), { recursive: true });
   await writeFile(join(publicDir, "blog", "index.html"), renderBlog(await listPosts(false)), "utf8");
@@ -300,7 +302,7 @@ ${bio}
 }
 
 function renderBlog(posts: Post[]) {
-  const rows = posts.map((post) => `<article class="blog-post"><p class="blog-date">${formatDate(post.date)}</p><h2><a href="/blog/posts/${post.slug}/" class="blog-post-title">${escapeHtml(post.title)}</a></h2></article>`).join("\n");
+  const rows = posts.map((post) => `<article class="blog-post"><p class="blog-date">${formatDate(post.date)}</p><h2><a href="/blog/post/${post.slug}/" class="blog-post-title">${escapeHtml(post.title)}</a></h2></article>`).join("\n");
   return shell("Blog - ni5arga", `${bg()}${header()}<main><div class="blog-container"><a href="/" class="back">← back home</a><div class="blog-header"><h1 class="blog-title">Blog</h1><p class="blog-subtitle">Thoughts on programming, security, and whatever else is on my mind.</p></div><div class="blog-list">${rows}</div></div></main>${footer()}`);
 }
 
@@ -319,10 +321,11 @@ function adminNav(active: AdminPage) {
   return `<nav class="admin-tabs">${item("/admin/home", "home", "Home")}${item("/admin/post", "posts", "Posts")}${item("/admin/new-post", "new-post", "New Post")}</nav>`;
 }
 
-function icon(name: "filter" | "search" | "edit" | "download" | "trash") {
+function icon(name: "filter" | "search" | "preview" | "edit" | "download" | "trash") {
   const paths = {
     filter: '<path d="M3 5h18l-7 8v5l-4 2v-7Z"></path>',
     search: '<circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path>',
+    preview: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle>',
     edit: '<path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path>',
     download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M7 10l5 5 5-5"></path><path d="M12 15V3"></path>',
     trash: '<path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M19 6l-1 14H6L5 6"></path>',
@@ -335,11 +338,12 @@ function postBadge(post: PostMeta) {
 }
 
 function adminPostContent(post: Post) {
+  const deleteButton = post.published ? `<button type="button" class="icon-button danger" data-detail-delete="${post.slug}" aria-label="Delete post" title="Delete">${icon("trash")}<span class="sr-only">Delete</span></button>` : "";
   return `<section class="admin-section posts-section">
     <article class="admin-post-view">
       <article>
         <a href="/admin/post" class="back">← Back to admin post library</a>
-        <div class="admin-post-title-row"><h1 class="admin-post-title">${escapeHtml(post.title)}</h1><div class="admin-title-tools">${postBadge(post)}<div class="admin-action-buttons"><button type="button" class="icon-button" data-detail-edit="${post.slug}" aria-label="Edit post" title="Edit">${icon("edit")}<span class="sr-only">Edit</span></button><button type="button" class="icon-button" data-detail-download="${post.slug}" aria-label="Download Markdown" title="Download .md">${icon("download")}<span class="sr-only">Download .md</span></button><button type="button" class="icon-button danger" data-detail-delete="${post.slug}" aria-label="Delete post" title="Delete">${icon("trash")}<span class="sr-only">Delete</span></button></div></div></div>
+        <div class="admin-post-title-row"><h1 class="admin-post-title">${escapeHtml(post.title)}</h1><div class="admin-title-tools">${postBadge(post)}<div class="admin-action-buttons"><button type="button" class="icon-button" data-detail-preview="${post.slug}" aria-label="Preview post" title="Preview">${icon("preview")}<span class="sr-only">Preview</span></button><button type="button" class="icon-button" data-detail-edit="${post.slug}" aria-label="Edit post" title="Edit">${icon("edit")}<span class="sr-only">Edit</span></button><button type="button" class="icon-button" data-detail-download="${post.slug}" aria-label="Download Markdown" title="Download .md">${icon("download")}<span class="sr-only">Download .md</span></button>${deleteButton}</div></div></div>
         <p class="post-meta">${formatDate(post.date)}</p>
         <div class="post-content">${post.html}</div>
       </article>
@@ -379,6 +383,18 @@ function adminPage(page: AdminPage, contentOverride = "") {
 </main><script src="/admin.js"></script>`);
 }
 
+function htmlResponse(body: string, init: ResponseInit = {}) {
+  return new Response(body, { ...init, headers: { "content-type": "text/html; charset=utf-8", ...(init.headers ?? {}) } });
+}
+
+function redirect(location: string) {
+  return new Response(null, { status: 302, headers: { location } });
+}
+
+function notFoundPage() {
+  return shell("Not found - ni5arga", `${bg()}${header()}<main><article><a href="/admin/post" class="back">â† Back to admin post library</a><h1>Not found</h1><p class="post-meta">That post does not exist.</p></article></main>${footer()}`);
+}
+
 async function handleAdminApi(req: Request, url: URL) {
   if (url.pathname === "/api/admin/login" && req.method === "POST") {
     const { password } = await req.json();
@@ -409,7 +425,12 @@ async function handleAdminApi(req: Request, url: URL) {
   }
   const downloadMatch = url.pathname.match(/^\/api\/admin\/posts\/([^/]+)\/download$/);
   if (downloadMatch && req.method === "GET") {
-    const post = await readPost(downloadMatch[1]);
+    let post: Post;
+    try {
+      post = await readPost(downloadMatch[1]);
+    } catch {
+      return json({ error: "Not found" }, { status: 404 });
+    }
     return new Response(downloadableMarkdownFile(post), {
       headers: {
         "cache-control": "no-store",
@@ -423,7 +444,13 @@ async function handleAdminApi(req: Request, url: URL) {
   const postMatch = url.pathname.match(/^\/api\/admin\/posts\/([^/]+)$/);
   if (postMatch) {
     const slug = safeSlug(postMatch[1]);
-    if (req.method === "GET") return json({ ...(await readPost(slug)), assets: await listAssets(slug) });
+    if (req.method === "GET") {
+      try {
+        return json({ ...(await readPost(slug)), assets: await listAssets(slug) });
+      } catch {
+        return json({ error: "Not found" }, { status: 404 });
+      }
+    }
     if (req.method === "PUT") return json(await updatePost(slug, await req.json()));
     if (req.method === "DELETE") {
       await deletePost(slug);
@@ -453,11 +480,11 @@ async function handleAdminApi(req: Request, url: URL) {
 async function listAssets(slug: string) {
   const assetDir = join(blogDir, safeSlug(slug), "assets");
   if (!existsSync(assetDir)) return [];
-  return (await readdir(assetDir)).map((name) => ({ name, url: `/blog/posts/${slug}/assets/${name}` }));
+  return (await readdir(assetDir)).map((name) => ({ name, url: `/blog/post/${slug}/assets/${name}` }));
 }
 
 async function serveAsset(req: Request, pathname: string) {
-  const match = pathname.match(/^\/blog\/posts\/([^/]+)\/assets\/(.+)$/);
+  const match = pathname.match(/^\/blog\/post\/([^/]+)\/assets\/(.+)$/);
   if (!match) return null;
   let post: Post;
   try {
@@ -482,33 +509,43 @@ Bun.serve({
       if (asset) return asset;
       if (url.pathname === "/health") return json({ ok: true });
       if (url.pathname.startsWith("/api/admin/")) return handleAdminApi(req, url);
-      if (url.pathname === "/admin" || url.pathname === "/admin/") return new Response(null, { status: 302, headers: { location: "/admin/home" } });
-      if (url.pathname === "/admin/home") return new Response(adminPage("home"), { headers: { "content-type": "text/html; charset=utf-8" } });
-      if (url.pathname === "/admin/posts") return new Response(null, { status: 302, headers: { location: "/admin/post" } });
-      if (url.pathname === "/admin/post") return new Response(adminPage("posts"), { headers: { "content-type": "text/html; charset=utf-8" } });
-      if (url.pathname === "/admin/new-post") return new Response(adminPage("new-post"), { headers: { "content-type": "text/html; charset=utf-8" } });
+      if (url.pathname === "/admin" || url.pathname === "/admin/") return redirect("/admin/home");
+      if (url.pathname === "/admin/home") return htmlResponse(adminPage("home"));
+      if (url.pathname === "/admin/posts") return redirect("/admin/post");
+      if (url.pathname === "/admin/post") return htmlResponse(adminPage("posts"));
+      if (url.pathname === "/admin/new-post") return htmlResponse(adminPage("new-post"));
       const adminPostRoute = url.pathname.match(/^\/admin\/post\/([^/]+)\/?$/);
       if (adminPostRoute) {
-        if (!validSession(req)) return new Response(adminPage("posts"), { headers: { "content-type": "text/html; charset=utf-8" } });
-        const post = await readPost(adminPostRoute[1]);
-        return new Response(adminPage("post", adminPostContent(post)), { headers: { "content-type": "text/html; charset=utf-8" } });
+        if (!validSession(req)) return redirect("/admin/home");
+        try {
+          const post = await readPost(adminPostRoute[1]);
+          return htmlResponse(adminPage("post", adminPostContent(post)));
+        } catch {
+          return htmlResponse(notFoundPage(), { status: 404 });
+        }
       }
       const adminPreviewRoute = url.pathname.match(/^\/admin\/preview\/([^/]+)\/$/);
       if (adminPreviewRoute) {
         if (!validSession(req)) return new Response("Not found", { status: 404 });
-        const post = await readPost(adminPreviewRoute[1]);
-        return new Response(renderPost(post), { headers: { "content-type": "text/html; charset=utf-8" } });
+        try {
+          const post = await readPost(adminPreviewRoute[1]);
+          return htmlResponse(renderPost(post));
+        } catch {
+          return htmlResponse(notFoundPage(), { status: 404 });
+        }
       }
-      if (url.pathname === "/" || url.pathname === "/index.html") return new Response(renderHome(await readSite()), { headers: { "content-type": "text/html; charset=utf-8" } });
-      if (url.pathname === "/blog/") return new Response(renderBlog(await listPosts(false)), { headers: { "content-type": "text/html; charset=utf-8" } });
-      const postRoute = url.pathname.match(/^\/blog\/posts\/([^/]+)\/$/);
+      if (url.pathname === "/" || url.pathname === "/index.html") return htmlResponse(renderHome(await readSite()));
+      if (url.pathname === "/blog/") return htmlResponse(renderBlog(await listPosts(false)));
+      const oldPostRoute = url.pathname.match(/^\/blog\/posts\/([^/]+)\/$/);
+      if (oldPostRoute) return redirect(`/blog/post/${safeSlug(oldPostRoute[1])}/`);
+      const postRoute = url.pathname.match(/^\/blog\/post\/([^/]+)\/$/);
       if (postRoute) {
         if (!existsSync(join(blogDir, safeSlug(postRoute[1]), "index.md"))) {
           return new Response("Not found", { status: 404 });
         }
         const post = await readPost(postRoute[1]);
         if (!post.published && !validSession(req)) return new Response("Not found", { status: 404 });
-        return new Response(renderPost(post), { headers: { "content-type": "text/html; charset=utf-8" } });
+        return htmlResponse(renderPost(post));
       }
       return new Response("Not found", { status: 404 });
     } catch (error) {

@@ -261,7 +261,6 @@ html[data-theme="dark"] .sun-icon { display: none; }
     margin-bottom: 28px;
     font-weight: 400;
     letter-spacing: 0.04em;
-    text-transform: lowercase;
 }
 
 .hero-bio {

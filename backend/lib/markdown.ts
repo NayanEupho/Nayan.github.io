@@ -28,7 +28,7 @@ function inlineMarkdown(text: string, slug: string) {
     if (cleanSrc.startsWith("http://") || cleanSrc.startsWith("https://") || cleanSrc.startsWith("/")) {
       url = cleanSrc;
     } else if (!cleanSrc.includes(":")) {
-      url = `/blog/posts/${slug}/assets/${cleanSrc.replace(/^\.?\/?assets\//, "")}`;
+      url = `/blog/post/${slug}/assets/${cleanSrc.replace(/^\.?\/?assets\//, "")}`;
     }
     return `<img src="${escapeHtml(url)}" alt="${escapeHtml(alt)}">`;
   });

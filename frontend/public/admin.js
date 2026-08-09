@@ -192,6 +192,10 @@ function downloadPost(slug) {
   window.open(`/api/admin/posts/${slug}/download`, "_blank", "noopener");
 }
 
+function previewPost(slug) {
+  window.open(`/admin/preview/${encodeURIComponent(slug)}/`, "_blank", "noopener");
+}
+
 async function deletePost(slug) {
   if (!confirm("Delete this post and all of its assets?")) return;
   if (!confirm("This cannot be undone. Delete it permanently?")) return;
@@ -250,6 +254,7 @@ document.addEventListener("click", async (event) => {
     renderSearchMenu();
     return openPostPage(button.dataset.searchOpen);
   }
+  if (button?.dataset.detailPreview) return previewPost(button.dataset.detailPreview);
   if (button?.dataset.detailEdit) {
     location.href = `/admin/new-post?edit=${encodeURIComponent(button.dataset.detailEdit)}`;
     return;

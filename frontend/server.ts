@@ -3,14 +3,14 @@ const publicDir = `${import.meta.dir}/public`;
 const routes: Record<string, string> = {
   "/": "index.html",
   "/blog/": "blog/index.html",
-  "/blog/posts/hacking-ccd/": "blog/posts/hacking-ccd/index.html",
-  "/blog/posts/so-you-want-to-be-a-hacker/": "blog/posts/generic.html",
-  "/blog/posts/hacking-cbse/": "blog/posts/generic.html",
-  "/blog/posts/finding-vulnerabilities-in-fossunited/": "blog/posts/generic.html",
-  "/blog/posts/browser-fingerprinting/": "blog/posts/generic.html",
-  "/blog/posts/employment/": "blog/posts/generic.html",
-  "/blog/posts/OhSINT/": "blog/posts/generic.html",
-  "/blog/posts/how-i-hacked-an-arg-site/": "blog/posts/generic.html",
+  "/blog/post/hacking-ccd/": "blog/post/hacking-ccd/index.html",
+  "/blog/post/so-you-want-to-be-a-hacker/": "blog/posts/generic.html",
+  "/blog/post/hacking-cbse/": "blog/posts/generic.html",
+  "/blog/post/finding-vulnerabilities-in-fossunited/": "blog/posts/generic.html",
+  "/blog/post/browser-fingerprinting/": "blog/posts/generic.html",
+  "/blog/post/employment/": "blog/posts/generic.html",
+  "/blog/post/OhSINT/": "blog/posts/generic.html",
+  "/blog/post/how-i-hacked-an-arg-site/": "blog/posts/generic.html",
 };
 
 const types: Record<string, string> = {
@@ -46,11 +46,16 @@ Bun.serve({
       return new Response(null, { status: 302, headers: { location: "/admin/post" } });
     }
 
+    const oldBlogPost = url.pathname.match(/^\/blog\/posts\/([^/]+)(\/.*)?$/);
+    if (oldBlogPost) {
+      return new Response(null, { status: 302, headers: { location: `/blog/post/${oldBlogPost[1]}${oldBlogPost[2] ?? "/"}` } });
+    }
+
     if (
       url.pathname === "/" ||
       url.pathname.startsWith("/admin/") ||
       url.pathname === "/blog/" ||
-      url.pathname.startsWith("/blog/posts/") ||
+      url.pathname.startsWith("/blog/post/") ||
       url.pathname.startsWith("/api/admin/")
     ) {
       const init: RequestInit = {
@@ -62,6 +67,7 @@ Bun.serve({
       }
       return fetch(`${backendUrl}${url.pathname}${url.search}`, {
         ...init,
+        redirect: "manual",
       });
     }
 
