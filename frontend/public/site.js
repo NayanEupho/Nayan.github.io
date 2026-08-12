@@ -20,15 +20,16 @@ themeToggle?.addEventListener("click", () => {
 function updateClock() {
   const localTime = document.getElementById("localTime");
   if (!localTime) return;
+  const timeZone = document.querySelector("[data-timezone]")?.dataset.timezone || "Asia/Kolkata";
 
   const now = new Date().toLocaleString("en-US", {
-    timeZone: "Asia/Kolkata",
+    timeZone,
     hour: "2-digit",
     minute: "2-digit",
     hour12: true,
   });
 
-  localTime.textContent = `${now} IST`;
+  localTime.textContent = now;
 }
 
 updateClock();

@@ -6,7 +6,7 @@ export function escapeHtml(value: string) {
     .replaceAll('"', "&quot;");
 }
 
-function safeHref(value: string) {
+export function safeHref(value: string) {
   const href = value.trim();
   if (href.startsWith("/") || href.startsWith("#")) return escapeHtml(href);
 
@@ -20,7 +20,9 @@ function safeHref(value: string) {
   return "#";
 }
 
-function inlineMarkdown(text: string, slug: string) {
+export type ContentType = "blog" | "project";
+
+function inlineMarkdown(text: string, slug: string, type: ContentType) {
   let out = escapeHtml(text);
   out = out.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_m, alt, src) => {
     const cleanSrc = src.trim();
@@ -28,7 +30,8 @@ function inlineMarkdown(text: string, slug: string) {
     if (cleanSrc.startsWith("http://") || cleanSrc.startsWith("https://") || cleanSrc.startsWith("/")) {
       url = cleanSrc;
     } else if (!cleanSrc.includes(":")) {
-      url = `/blog/post/${slug}/assets/${cleanSrc.replace(/^\.?\/?assets\//, "")}`;
+      const section = type === "project" ? "projects" : "blog";
+      url = `/${section}/post/${slug}/assets/${cleanSrc.replace(/^\.?\/?assets\//, "")}`;
     }
     return `<img src="${escapeHtml(url)}" alt="${escapeHtml(alt)}">`;
   });
@@ -39,7 +42,7 @@ function inlineMarkdown(text: string, slug: string) {
   return out;
 }
 
-export function markdownToHtml(markdown: string, slug: string) {
+export function markdownToHtml(markdown: string, slug: string, type: ContentType = "blog") {
   const lines = markdown.replace(/\r\n/g, "\n").split("\n");
   const html: string[] = [];
   let paragraph: string[] = [];
@@ -51,22 +54,28 @@ export function markdownToHtml(markdown: string, slug: string) {
 
   const flushParagraph = () => {
     if (!paragraph.length) return;
-    html.push(`<p>${inlineMarkdown(paragraph.join(" "), slug)}</p>`);
+    // Preserve deliberate line breaks in the editor instead of collapsing them.
+    html.push(`<p>${paragraph.map((line) => inlineMarkdown(line, slug, type)).join("<br>\n")}</p>`);
     paragraph = [];
   };
   const flushList = () => {
     if (!list.length) return;
-    html.push(`<ul>${list.map((item) => `<li>${inlineMarkdown(item, slug)}</li>`).join("")}</ul>`);
+    html.push(`<ul>${list.map((item) => `<li>${inlineMarkdown(item, slug, type)}</li>`).join("")}</ul>`);
     list = [];
   };
   const flushQuote = () => {
     if (!quote.length) return;
-    html.push(`<blockquote>${quote.map((item) => `<p>${inlineMarkdown(item, slug)}</p>`).join("")}</blockquote>`);
+    html.push(`<blockquote>${quote.map((item) => `<p>${inlineMarkdown(item, slug, type)}</p>`).join("")}</blockquote>`);
     quote = [];
   };
   const flushTable = () => {
-    if (table.length < 2) return;
-    const rows = table.map((row) => row.trim().replace(/^\||\|$/g, "").split("|").map((cell) => inlineMarkdown(cell.trim(), slug)));
+    if (!table.length) return;
+    if (table.length < 2) {
+      html.push(`<p>${table.map((line) => inlineMarkdown(line, slug, type)).join("<br>\n")}</p>`);
+      table = [];
+      return;
+    }
+    const rows = table.map((row) => row.trim().replace(/^\||\|$/g, "").split("|").map((cell) => inlineMarkdown(cell.trim(), slug, type)));
     const header = rows[0];
     const body = rows.slice(2);
     html.push(`<div class="table-wrap"><table><thead><tr>${header.map((cell) => `<th>${cell}</th>`).join("")}</tr></thead><tbody>${body.map((row) => `<tr>${row.map((cell) => `<td>${cell}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`);
@@ -124,20 +133,23 @@ export function markdownToHtml(markdown: string, slug: string) {
     }
     if (line.startsWith("#### ")) {
       flushAll();
-      html.push(`<h4>${inlineMarkdown(line.slice(5), slug)}</h4>`);
+      html.push(`<h4>${inlineMarkdown(line.slice(5), slug, type)}</h4>`);
       continue;
     }
     if (line.startsWith("### ")) {
       flushAll();
-      html.push(`<h3>${inlineMarkdown(line.slice(4), slug)}</h3>`);
+      html.push(`<h3>${inlineMarkdown(line.slice(4), slug, type)}</h3>`);
       continue;
     }
     if (line.startsWith("## ")) {
       flushAll();
-      html.push(`<h2>${inlineMarkdown(line.slice(3), slug)}</h2>`);
+      html.push(`<h2>${inlineMarkdown(line.slice(3), slug, type)}</h2>`);
       continue;
     }
     paragraph.push(line.trim());
+  }
+  if (code) {
+    html.push(`<pre class="language-${escapeHtml(codeLang)}"><code class="language-${escapeHtml(codeLang)}">${escapeHtml(code.join("\n"))}</code></pre>`);
   }
   flushAll();
   return html.join("\n");

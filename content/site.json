@@ -2,7 +2,7 @@
   "name": "Nayan Modi",
   "subtitle": "AI/ML Engineer & Systems Enthusiat",
   "avatar": "/pfp.jpg",
-  "location": "New Delhi, India",
+  "location": "Ahmedabad, India",
   "timezone": "Asia/Kolkata",
   "bio": [
     "Hi, I'm a 19 year old software engineer, cybersecurity researcher, CTF player, and curious mind deeply interested in open-source, cybersecurity, and digital investigations. I build things for fun (and sometimes they are actually useful).",
@@ -12,9 +12,10 @@
   ],
   "links": {
     "blog": "/blog/",
+    "projects": "/projects/",
     "press": "/press/",
     "github": "https://github.com/ni5arga",
-    "twitter": "https://twitter.com/ni5arga",
+    "twitter": "https://twitter.com/ni5arg",
     "email": "hello@ni5arga.com",
     "resume": "/resume.pdf"
   }

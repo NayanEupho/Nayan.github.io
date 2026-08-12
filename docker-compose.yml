@@ -6,7 +6,14 @@ services:
     environment:
       API_URL: http://backend:3001
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
 
   backend:
     build: ./backend
@@ -17,18 +24,34 @@ services:
       SQLITE_PATH: /data/site.sqlite
       CONTENT_DIR: /content
       PUBLIC_DIR: /public
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
+      NODE_ENV: production
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
+      ADMIN_SESSION_SECRET: ${ADMIN_SESSION_SECRET:-}
+      APP_ORIGIN: ${APP_ORIGIN:-http://localhost:3000}
     volumes:
       - sqlite-data:/data
       - ./content:/content
       - ./frontend/public:/public
     depends_on:
-      - database
+      database:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
 
   database:
     build: ./db
     volumes:
       - sqlite-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "sqlite3 /data/site.sqlite 'PRAGMA quick_check;' | grep -q ok"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
 
 volumes:
   sqlite-data:

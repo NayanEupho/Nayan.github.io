@@ -2,22 +2,32 @@
 
 Pixel-focused static clone of `https://ni5arga.com/` with the home page, blog index, and the `hacking-ccd` article route.
 
+See [USAGE.md](USAGE.md) for complete Bun and Docker installation, startup,
+shutdown, environment, and troubleshooting instructions.
+
 ## Local
+
+Create your private environment file and set a password of at least 8 characters:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Edit `.env` to set `ADMIN_PASSWORD`. Bun loads this file automatically. The file
+is ignored by Git, so changing the value and restarting the backend rotates the
+admin password without changing source code.
 
 Run the backend API:
 
 ```powershell
-cd backend
-$env:ADMIN_PASSWORD = "change-me"
-bun server.ts
+bun backend/server.ts
 ```
 
 Run the frontend:
 
 ```powershell
-cd frontend
 $env:API_URL = "http://localhost:3001"
-bun server.ts
+bun frontend/server.ts
 ```
 
 Open `http://localhost:3000`.
@@ -28,12 +38,9 @@ Open `http://localhost:3000`.
 docker compose up --build
 ```
 
-Set `ADMIN_PASSWORD` before running Compose for a non-default admin password:
-
-```powershell
-$env:ADMIN_PASSWORD = "change-me"
-docker compose up --build
-```
+Compose reads `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`, and `APP_ORIGIN` from
+the root `.env` file. There is no default admin password; startup fails when the
+password is missing or shorter than 8 characters.
 
 Services:
 
