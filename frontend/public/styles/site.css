@@ -1,0 +1,147 @@
+.hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+    padding: 24px 24px 60px;
+}
+
+.hero-content {
+    max-width: 560px;
+    width: 100%;
+    text-align: center;
+}
+
+.home-page .avatar {
+    width: 92px;
+    height: 92px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--bg-secondary);
+    box-shadow: 0 0 0 1px var(--border), var(--shadow-lg);
+    transition: transform var(--transition-spring), box-shadow var(--transition-spring);
+    margin-bottom: 24px;
+}
+
+.home-page .avatar:hover {
+    transform: scale(1.06) rotate(-2deg);
+    box-shadow: 0 0 0 2px var(--accent), 0 20px 60px var(--accent-light), var(--shadow-lg);
+}
+
+.hero-name {
+    font-family: var(--font-serif);
+    font-size: 3.5rem;
+    font-weight: 400;
+    font-style: italic;
+    letter-spacing: -0.03em;
+    line-height: 1.0;
+    margin-bottom: 6px;
+    color: var(--text);
+}
+
+.hero-aka {
+    color: var(--text-tertiary);
+    font-size: 15px;
+    margin-bottom: 28px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+}
+
+.hero-bio {
+    color: var(--text-secondary);
+    font-size: 15.5px;
+    line-height: 1.7;
+    margin-bottom: 16px;
+    text-align: left;
+}
+
+.hero-bio:last-of-type { margin-bottom: 28px; }
+
+.hero-bio a,
+.post-content a,
+.project a {
+    color: var(--text);
+    font-weight: 500;
+    text-decoration: underline;
+    text-decoration-color: var(--border);
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1.5px;
+    transition: text-decoration-color var(--transition);
+}
+
+.hero-bio a:hover,
+.post-content a:hover,
+.project a:hover { text-decoration-color: var(--text); }
+
+.hero-links {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    flex-wrap: wrap;
+    margin-bottom: 9px;
+}
+
+.hero-links a {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-decoration: none;
+    letter-spacing: 0.01em;
+    transition: color var(--transition);
+}
+
+.hero-links a:hover {
+    color: var(--accent);
+    opacity: 1;
+}
+
+.home-footer {
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: 0.01em;
+    animation: fadeIn 1s ease 0.8s both;
+    pointer-events: none;
+}
+
+.footer-dot {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--text-quaternary);
+    flex-shrink: 0;
+}
+
+.footer-time { font-variant-numeric: tabular-nums; }
+
+.home-page .avatar { animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+.hero-name { animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both; }
+.hero-aka { animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both; }
+.hero-bio:nth-child(1 of .hero-bio) { animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both; }
+.hero-bio:nth-child(2 of .hero-bio) { animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.42s both; }
+.hero-bio:nth-child(3 of .hero-bio) { animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.49s both; }
+.hero-bio:nth-child(4 of .hero-bio) { animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.56s both; }
+.hero-links { animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both; }
+.theme-toggle { animation: fadeIn 1s ease 0.5s both; }
+
+@media (max-width: 768px) {
+    .hero-links { margin-bottom: 4px; gap: 20px; }
+    .hero-links a { font-size: 15px; }
+    .home-footer { bottom: 12px; gap: 6px; font-size: 12px; }
+}
+
+@media (max-width: 640px) {
+    .hero-name { font-size: 2.5rem; }
+}

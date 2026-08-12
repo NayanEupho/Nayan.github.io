@@ -4,3 +4,9 @@ node_modules/
 .env
 .env.*
 !.env.example
+.qa/
+
+# Admin-managed content and generated public pages are runtime data.
+content/blog/
+frontend/public/blog/
+frontend/public/projects/

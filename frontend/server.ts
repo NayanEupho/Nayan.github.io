@@ -5,19 +5,6 @@ const publicDir = resolve(import.meta.dir, "public");
 const themeScript = '(function(){var saved=localStorage.getItem("theme")||"dark";document.documentElement.setAttribute("data-theme",saved);})();';
 const themeScriptHash = createHash("sha256").update(themeScript).digest("base64");
 
-const routes: Record<string, string> = {
-  "/": "index.html",
-  "/blog/": "blog/index.html",
-  "/blog/post/hacking-ccd/": "blog/post/hacking-ccd/index.html",
-  "/blog/post/so-you-want-to-be-a-hacker/": "blog/posts/generic.html",
-  "/blog/post/hacking-cbse/": "blog/posts/generic.html",
-  "/blog/post/finding-vulnerabilities-in-fossunited/": "blog/posts/generic.html",
-  "/blog/post/browser-fingerprinting/": "blog/posts/generic.html",
-  "/blog/post/employment/": "blog/posts/generic.html",
-  "/blog/post/OhSINT/": "blog/posts/generic.html",
-  "/blog/post/how-i-hacked-an-arg-site/": "blog/posts/generic.html",
-};
-
 const types: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
@@ -113,8 +100,7 @@ Bun.serve({
       }
     }
 
-    const routeFile = routes[url.pathname];
-    const resolved = publicFilePath(routeFile ?? url.pathname);
+    const resolved = publicFilePath(url.pathname);
     if (!resolved) return new Response("Not found", { status: 404, headers: securityHeaders() });
     const file = Bun.file(resolved.candidate);
 

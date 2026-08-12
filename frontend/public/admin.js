@@ -647,9 +647,9 @@ async function deleteAsset(name) {
   showToast("Asset deleted");
 }
 
-async function deletePost(slug) {
-  if (!confirm("Delete this post and all of its assets?")) return;
-  if (!confirm("This cannot be undone. Delete it permanently?")) return;
+async function deletePost(slug, kind = "post") {
+  if (!confirm(`Delete this ${kind} and all of its assets?`)) return;
+  if (!confirm(`This cannot be undone. Delete the ${kind} permanently?`)) return;
   await api(`/api/admin/posts/${slug}`, { method: "DELETE" });
   location.href = "/admin/post";
 }
@@ -935,7 +935,7 @@ document.addEventListener("click", async (event) => {
     return;
   }
   if (button?.dataset.detailDownload) return downloadPost(button.dataset.detailDownload);
-  if (button?.dataset.detailDelete) return deletePost(button.dataset.detailDelete);
+  if (button?.dataset.detailDelete) return deletePost(button.dataset.detailDelete, button.dataset.detailKind);
   if (button?.dataset.insertAsset) return insertAssetMarkdown(button.dataset.insertAsset);
   if (button?.dataset.autocompleteAsset) return chooseAutocompleteAsset(button.dataset.autocompleteAsset);
   if (button?.dataset.deleteAsset) return deleteAsset(button.dataset.deleteAsset);

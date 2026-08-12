@@ -482,7 +482,18 @@ function footer() {
   return `<footer><div class="footer-inner"><span class="footer-credit"><a href="/">ni5arga</a></span><div class="footer-links"><a href="https://github.com/ni5arga" target="_blank" rel="noopener noreferrer" aria-label="GitHub">GitHub</a><a href="https://x.com/ni5arga" target="_blank" rel="noopener noreferrer" aria-label="X/Twitter">X</a></div></div></footer>`;
 }
 
-function shell(title: string, body: string, bodyClass = "") {
+type StyleSet = "home" | "content" | "admin";
+
+function stylesheetLinks(styleSet: StyleSet) {
+  const files = styleSet === "home"
+    ? ["shared", "site"]
+    : styleSet === "admin"
+      ? ["shared", "content", "admin", "editor"]
+      : ["shared", "site", "content"];
+  return files.map((file) => `<link rel="stylesheet" href="/styles/${file}.css">`).join("\n    ");
+}
+
+function shell(title: string, body: string, bodyClass = "", styleSet: StyleSet = "content") {
   return `<!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
@@ -490,7 +501,7 @@ function shell(title: string, body: string, bodyClass = "") {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${escapeHtml(title)}</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-    <link rel="stylesheet" href="/styles.css">
+    ${stylesheetLinks(styleSet)}
     ${themeInit()}
 </head>
 <body${bodyClass ? ` class="${bodyClass}"` : ""}>
@@ -512,7 +523,7 @@ ${themeButton()}
 ${bio}
 <div class="hero-links"><a href="${safeHref(site.links.blog)}">blog</a><a href="${safeHref(site.links.projects)}">projects</a>${externalLink(site.links.github, "github")}${externalLink(site.links.twitter, "twitter")}<a href="${safeHref(`mailto:${site.links.email}`)}">email</a></div>
 </div></main>
-<footer class="home-footer"><span class="footer-location">📍 ${escapeHtml(site.location)}</span><span class="footer-dot"></span><span class="footer-time" id="localTime"></span></footer>`, "home-page");
+<footer class="home-footer"><span class="footer-location">📍 ${escapeHtml(site.location)}</span><span class="footer-dot"></span><span class="footer-time" id="localTime"></span></footer>`, "home-page", "home");
 }
 
 function renderListing(posts: PostMeta[], type: ContentType) {
@@ -564,7 +575,7 @@ function postBadge(post: PostMeta) {
 }
 
 function adminPostContent(post: Post) {
-  const deleteButton = post.published ? `<button type="button" class="icon-button danger" data-detail-delete="${post.slug}" aria-label="Delete post" title="Delete">${icon("trash")}<span class="sr-only">Delete</span></button>` : "";
+  const deleteButton = `<button type="button" class="icon-button danger" data-detail-delete="${post.slug}" data-detail-kind="${post.published ? "post" : "draft"}" aria-label="Delete ${post.published ? "post" : "draft"}" title="Delete">${icon("trash")}<span class="sr-only">Delete</span></button>`;
   return `<section class="admin-section posts-section">
     <article class="admin-post-view">
       <article>
@@ -690,7 +701,7 @@ function adminPage(page: AdminPage, contentOverride = "") {
   ${adminNav(page)}
   ${content}
 </section>
-</main><script src="/admin.js"></script>`);
+</main><script src="/admin.js"></script>`, "", "admin");
 }
 
 function htmlResponse(body: string, init: ResponseInit = {}) {

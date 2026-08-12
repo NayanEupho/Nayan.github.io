@@ -171,6 +171,21 @@ The current publishing implementation stores site and post content under
 `content`; the SQLite service is initialized for the container architecture but
 does not currently hold blog or admin records.
 
+### CMS Content and Git
+
+Admin-managed posts are runtime data and are intentionally ignored by Git:
+
+- `content/blog/` contains the Markdown source, draft state, and uploaded assets.
+- `frontend/public/blog/` and `frontend/public/projects/` contain generated public HTML.
+
+Back up `content/blog/` separately. It is the source of truth for both published
+posts and saved drafts. The two public directories can be regenerated from that
+source and do not need a separate backup.
+
+Because this content is ignored, a clean Git clone starts with an empty post
+library unless a `content/blog/` backup is restored. Do not use `git clean -fdx`
+in a working deployment because it can delete ignored CMS content.
+
 Check service status and health:
 
 ```powershell
