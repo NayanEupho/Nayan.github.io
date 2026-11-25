@@ -381,6 +381,198 @@ footer { animation: fadeIn 0.8s ease 0.8s both; }
     .post-content h3 { font-size: 1.125rem; }
 }
 
+.blog-desc {
+    margin: 6px 0 0;
+    color: var(--text-tertiary);
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.blog-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.tag {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 2px 10px;
+    letter-spacing: 0.02em;
+}
+
+/* Projects use a calm card grid so long GitHub descriptions stay readable. */
+.project-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-top: 48px;
+}
+
+.project-card {
+    display: block;
+    padding: 22px 24px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--bg-card);
+    color: var(--text);
+    text-decoration: none;
+    transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+}
+
+.project-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    opacity: 1;
+}
+
+.project-card h2 {
+    font-size: 1.25rem;
+    margin-bottom: 8px;
+}
+
+.project-card p {
+    color: var(--text-secondary);
+    font-size: 15px;
+    margin-bottom: 0;
+}
+
+.project-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 14px;
+    color: var(--text-tertiary);
+    font-size: 12.5px;
+    letter-spacing: 0.02em;
+}
+
+.project-meta-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.project-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+    padding: 12px 22px;
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    background: var(--accent);
+    color: var(--bg);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    box-shadow: var(--shadow-md);
+    transition: transform var(--transition), box-shadow var(--transition), background-color var(--transition), border-color var(--transition);
+}
+
+.project-cta:hover {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+    color: var(--bg);
+    opacity: 1;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.project-cta:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+
+.project-cta svg {
+    width: 16px;
+    height: 16px;
+    flex: none;
+}
+
+.contact-form {
+    display: grid;
+    gap: 18px;
+    margin-top: 40px;
+}
+
+.contact-form label {
+    display: grid;
+    gap: 8px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.contact-form input,
+.contact-form textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg-secondary);
+    color: var(--text);
+    font: inherit;
+    font-size: 15px;
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+.contact-form textarea {
+    resize: vertical;
+    min-height: 150px;
+}
+
+.contact-form button {
+    justify-self: start;
+    padding: 11px 22px;
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    background: var(--accent);
+    color: #0b1220;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity var(--transition), transform var(--transition);
+}
+
+.contact-form button:hover { opacity: 0.88; transform: translateY(-1px); }
+.contact-form button:disabled { opacity: 0.55; cursor: wait; transform: none; }
+
+.contact-status {
+    min-height: 1.4em;
+    font-size: 14px;
+    color: var(--text-tertiary);
+    margin-bottom: 0;
+}
+
+.contact-status.success { color: var(--accent); }
+.contact-status.error { color: #f87171; }
+
+.contact-direct {
+    margin-top: 36px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 15px;
+}
+
+@media (min-width: 641px) {
+    .project-grid { grid-template-columns: 1fr 1fr; }
+}
+
 @media (max-width: 640px) {
     h1, .blog-title { font-size: 2.25rem; }
     article h1 { font-size: 1.875rem; }

@@ -1,5 +1,5 @@
-FROM oven/bun:1.1-alpine
+FROM oven/bun:1-alpine
 WORKDIR /app
-COPY . .
+COPY frontend ./frontend
 EXPOSE 3000
-CMD ["bun", "server.ts"]
+CMD ["bun", "frontend/server.ts"]

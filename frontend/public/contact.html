@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact — Nayan Modi</title>
+    <meta name="description" content="Send Nayan Modi a message about agents, retrieval, or inference engineering.">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="/styles/shared.css">
+    <link rel="stylesheet" href="/styles/site.css">
+    <link rel="stylesheet" href="/styles/content.css">
+    <script>(function(){var saved=localStorage.getItem("theme")||"dark";document.documentElement.setAttribute("data-theme",saved);})();</script>
+</head>
+<body>
+<div class="bg-canvas"><div class="bg-blob bg-blob-1"></div><div class="bg-blob bg-blob-2"></div><div class="bg-grain"></div></div>
+<header class="site-header"><a href="/" class="header-logo">nayan</a><div class="header-actions"><button class="theme-toggle" aria-label="Toggle theme"><svg class="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg><svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></button></div></header>
+<main>
+<a href="/" class="back">&larr; back home</a>
+<div class="blog-header"><h1 class="blog-title">Contact</h1><p class="blog-subtitle">Tell me what you're building, what broke, or what you want to compare notes on.</p></div>
+<form class="contact-form" data-contact-form>
+    <label>Name<input name="name" required maxlength="100" autocomplete="name"></label>
+    <label>Email<input name="email" type="email" required maxlength="320" autocomplete="email"></label>
+    <label>Subject<input name="subject" required maxlength="200"></label>
+    <label>Message<textarea name="message" required minlength="10" maxlength="5000" rows="7"></textarea></label>
+    <label class="sr-only" aria-hidden="true">Company<input name="company" tabindex="-1" autocomplete="off"></label>
+    <button type="submit">Send message</button>
+    <p class="contact-status" data-contact-status role="status" aria-live="polite"></p>
+</form>
+<p class="contact-direct">Prefer email? Write to <a href="mailto:nayanmodicd@gmail.com">nayanmodicd@gmail.com</a>.</p>
+</main>
+<footer><div class="footer-inner"><span class="footer-credit"><a href="/">nayan</a></span><div class="footer-links"><a href="https://github.com/NayanEupho" target="_blank" rel="noopener noreferrer">GitHub</a><a href="/contact.html">Contact</a></div></div></footer>
+<script src="/site.js"></script>
+<script src="/contact.js"></script>
+</body>
+</html>

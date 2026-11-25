@@ -1,6 +1,0 @@
-/* Compatibility entry point. New pages load only the modules they need. */
-@import url("/styles/shared.css");
-@import url("/styles/site.css");
-@import url("/styles/content.css");
-@import url("/styles/admin.css");
-@import url("/styles/editor.css");

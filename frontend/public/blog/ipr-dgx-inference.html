@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Running LLMs on an 8×A100 DGX-1 — Nayan Modi</title>
+    <meta name="description" content="Notes from managing on-prem inference at IPR: vLLM, LiteLLM, VRAM pressure, concurrent users, and a CUDA 12.2 to 13.1 driver upgrade.">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="/styles/shared.css">
+    <link rel="stylesheet" href="/styles/site.css">
+    <link rel="stylesheet" href="/styles/content.css">
+    <script>(function(){var saved=localStorage.getItem("theme")||"dark";document.documentElement.setAttribute("data-theme",saved);})();</script>
+</head>
+<body>
+<div class="bg-canvas"><div class="bg-blob bg-blob-1"></div><div class="bg-blob bg-blob-2"></div><div class="bg-grain"></div></div>
+<header class="site-header"><a href="/" class="header-logo">nayan</a><div class="header-actions"><button class="theme-toggle" aria-label="Toggle theme"><svg class="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg><svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></button></div></header>
+<main>
+<article>
+<a href="/blog/" class="back">&larr; back to blog</a>
+<h1>Running LLMs on an 8×A100 DGX-1</h1>
+<p class="post-meta">Inference · vLLM · CUDA</p>
+<div class="post-content">
+<p>The inference side of an on-prem AI platform looks simple from the outside: start a model server, point applications at it, done. In practice most of the work is in the parts nobody demos — GPU memory, concurrency, model versions, access control, and the day the driver upgrade has to happen without taking every existing GPU job down with it.</p>
+<p>At IPR I worked on the serving layer for in-house RAG, agentic Kubernetes, and coding agents running on an NVIDIA DGX-1 with eight A100 80 GB GPUs. This post is a record of the decisions and the failures, especially the CUDA driver upgrade from 12.2 to 13.1.</p>
+
+<h2>The serving stack</h2>
+<p>We ended up with a layered setup:</p>
+<ul>
+    <li><strong>vLLM</strong> as the high-throughput inference engine, serving OpenAI-compatible endpoints.</li>
+    <li><strong>LiteLLM</strong> as the proxy in front of the model servers, handling routing, per-user API keys, limits, and a single interface for applications.</li>
+    <li><strong>Langfuse</strong> for observability — requests, latency, token usage, and traces across applications.</li>
+    <li><strong>A small Streamlit dashboard</strong> for key management, so users could get and rotate credentials without an operator editing configuration by hand.</li>
+    <li><strong>Ollama</strong> for lighter experiments and for models that did not need vLLM’s serving features.</li>
+</ul>
+<p>The proxy mattered more than expected. Once applications talk to one OpenAI-compatible endpoint, the model behind it becomes an implementation detail. We could move a workload from Ollama to vLLM, or from one quantisation to another, without changing every client.</p>
+
+<h2>Why vLLM, and where the time goes</h2>
+<p>vLLM’s advantage is not a single magic flag. It is a set of decisions that matter under concurrency: continuous batching, PagedAttention for KV-cache memory, and attention kernels that keep the GPUs busy. On a single request, the difference is modest. Under load, it is the difference between a queue and a service.</p>
+<p>We evaluated vLLM against Ollama on the agentic RAG workload. The vLLM path reduced worst-case time-to-first-token from 5.1 seconds to 2.7 seconds. Average latency is the number people quote; worst-case TTFT is the number users feel. A chat interface that starts answering in under three seconds feels responsive. One that occasionally takes five feels broken even if the average is fine.</p>
+<p>That result drove the serving decision for high-concurrency applications. Ollama remained useful for experimentation, but vLLM became the default for anything with more than a couple of simultaneous users.</p>
+
+<h2>VRAM is the real scheduler</h2>
+<p>On an eight-GPU node, memory is the constraint that shapes everything else. A model that fits is not the same as a model that serves well. The KV cache grows with context length and concurrency, so the question is not “does the model fit?” but “how many concurrent requests fit at the context lengths we actually use?”.</p>
+<p>Several things helped:</p>
+<ul>
+    <li><strong>Tensor parallelism</strong> to spread a model across GPUs when a single card could not hold it comfortably.</li>
+    <li><strong>Quantisation</strong> — FP8 and Mixture-of-Experts Qwen-class models — to raise throughput without falling off a quality cliff.</li>
+    <li><strong>Separate models on separate GPU sets</strong> where possible, so a large generation model did not starve an embedding or reranking model.</li>
+    <li><strong>Explicit context limits</strong> per deployment. Letting every request ask for the maximum context is a good way to exhaust the cache.</li>
+</ul>
+<p>The failure mode is familiar: everything works until traffic arrives, then requests start failing with out-of-memory errors or queuing for seconds. The fix is not a bigger <code>gpu-memory-utilization</code> value. It is deciding what the service is allowed to promise and configuring the cache and batch limits to match.</p>
+
+<h2>Keys, limits, and observability</h2>
+<p>An internal inference service without identity becomes a shared password. LiteLLM let us issue per-user keys, attach budgets and rate limits, and see who was consuming the GPUs. Langfuse added request-level traces, which made it possible to answer questions like “why was this agent slow?” instead of guessing.</p>
+<p>The platform served more than ten concurrent users across RAG, agentic Kubernetes, and coding agents. Those workloads have different shapes: RAG asks a few long-context questions, an agent makes many short tool-driven calls, and a coding agent can generate for a long time. A single global rate limit is the wrong control. Per-key limits and per-model routing let each workload get a share without one of them monopolising the node.</p>
+<p>BYOK integrations for Claude Code, OpenCode, and other OpenAI-compatible tools were part of the same idea: give people a familiar client, point it at the internal endpoint, and keep the credentials and usage inside the platform.</p>
+
+<h2>The CUDA upgrade: 12.2 to 13.1</h2>
+<p>New vLLM and Ollama releases, and the frontier open-weight models people wanted to run, eventually required a newer CUDA stack. The node was on CUDA 12.2. The target was 13.1. On a laptop this is a package upgrade. On a shared DGX with existing GPU jobs, it is a change window with a rollback plan.</p>
+<p>The naive approach — upgrade the driver and see what breaks — is how a maintenance window turns into an outage. We treated it as a compatibility project:</p>
+<ol>
+    <li><strong>Inventory the consumers.</strong> Every container image, PyTorch version, vLLM build, Ollama build, and custom CUDA job that touched the GPUs.</li>
+    <li><strong>Pin the target stack.</strong> Driver, CUDA toolkit, container toolkit, and framework wheels are a set. Mixing versions is where the weird errors come from.</li>
+    <li><strong>Test the matrix.</strong> Existing GPU jobs had to still run on the new driver, not just the new model server. Backward compatibility was the acceptance criterion.</li>
+    <li><strong>Stage the upgrade.</strong> Validate on a non-production node or a subset of GPUs first. Run a real workload, not a <code>nvidia-smi</code> smoke test.</li>
+    <li><strong>Keep a rollback path.</strong> Old containers, old images, and a documented way to restore the previous driver.</li>
+    <li><strong>Communicate the window.</strong> People plan around GPU availability. A silent upgrade is a support ticket generator.</li>
+</ol>
+<p>Most of the pain was not the driver itself. It was the long tail: an older image that expected a CUDA 12 runtime, a framework build that had not caught up, a container that needed the NVIDIA container toolkit to expose the new driver correctly. The upgrade only looked successful when the existing jobs ran, not when the new model started.</p>
+
+<h2>What I would do differently</h2>
+<p>I would separate the node into clearly owned GPU slices from the start. One set for interactive chat, one for batch embedding and fine-tuning, one for experiments. Shared access is convenient until a fine-tuning job consumes the memory an interactive service needs.</p>
+<p>I would also make model deployment declarative. A model version should be a configuration change with a recorded image, flags, quantisation, context limit, and rollback target — not a shell history entry. That makes it possible to answer “what exactly was running last Tuesday?”.</p>
+<p>And I would write the upgrade runbook before the first upgrade. The second one is easier; the first one teaches you what the runbook should contain.</p>
+
+<h2>Takeaways</h2>
+<ul>
+    <li><strong>Measure worst-case latency.</strong> Averages hide the queue.</li>
+    <li><strong>Treat VRAM as a scheduling problem.</strong> The model fitting is the beginning, not the end.</li>
+    <li><strong>Put a proxy in front.</strong> One OpenAI-compatible endpoint buys you the freedom to change engines.</li>
+    <li><strong>Give every consumer an identity.</strong> Keys, limits, and traces are operational features, not enterprise decoration.</li>
+    <li><strong>Treat driver upgrades as compatibility projects.</strong> The new model working is not the test; the old jobs working is.</li>
+</ul>
+<p>The related work is in <a href="https://github.com/NayanEupho/IPR-vLLM-Inference" target="_blank" rel="noopener noreferrer">IPR-vLLM-Inference</a>, <a href="https://github.com/NayanEupho/IPR-ollama-infrence-" target="_blank" rel="noopener noreferrer">IPR-ollama-infrence-</a>, and the <a href="https://github.com/NayanEupho/CUDA-vs-Vulkan-on-Nvidia-DGX1-comparision" target="_blank" rel="noopener noreferrer">CUDA vs Vulkan comparison</a>.</p>
+</div>
+</article>
+</main>
+<footer><div class="footer-inner"><span class="footer-credit"><a href="/">nayan</a></span><div class="footer-links"><a href="https://github.com/NayanEupho" target="_blank" rel="noopener noreferrer">GitHub</a><a href="/contact.html">Contact</a></div></div></footer>
+<script src="/site.js"></script>
+</body>
+</html>

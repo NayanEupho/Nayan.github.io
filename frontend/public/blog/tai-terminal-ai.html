@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TAI: a small terminal agent in Go — Nayan Modi</title>
+    <meta name="description" content="Building a minimal natural-language-to-command assistant in Go with Bubble Tea, and the safety and portability questions that came with it.">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="/styles/shared.css">
+    <link rel="stylesheet" href="/styles/site.css">
+    <link rel="stylesheet" href="/styles/content.css">
+    <script>(function(){var saved=localStorage.getItem("theme")||"dark";document.documentElement.setAttribute("data-theme",saved);})();</script>
+</head>
+<body>
+<div class="bg-canvas"><div class="bg-blob bg-blob-1"></div><div class="bg-blob bg-blob-2"></div><div class="bg-grain"></div></div>
+<header class="site-header"><a href="/" class="header-logo">nayan</a><div class="header-actions"><button class="theme-toggle" aria-label="Toggle theme"><svg class="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg><svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></button></div></header>
+<main>
+<article>
+<a href="/blog/" class="back">&larr; back to blog</a>
+<h1>TAI: a small terminal agent in Go</h1>
+<p class="post-meta">Go · CLI · Agents</p>
+<div class="post-content">
+<p>Most of my day happens in a terminal. The friction is small but constant: I know what I want to do, I do not remember the exact flag, and I end up in a browser searching for a man page. TAI — Terminal AI — was a small attempt to remove that context switch. It is a Go program built with Bubble Tea that takes a natural-language request and gives back the command, inline, without leaving the shell.</p>
+<p>The repository is <a href="https://github.com/NayanEupho/tai-AI-Agent" target="_blank" rel="noopener noreferrer">tai-AI-Agent</a>.</p>
+
+<h2>The design constraint: stay small</h2>
+<p>The temptation with an AI CLI is to make it a platform. I wanted the opposite. TAI should start fast, show a prompt, stream a short answer, and exit. No daemon, no database, no plugin system. The model runs behind an OpenAI-compatible endpoint, which means the same binary can point at an on-prem vLLM server or a local Ollama instance.</p>
+<p>Bubble Tea made the interface feel native: a small input, streaming output, and keyboard handling that does not fight the terminal. Go made the binary easy to distribute. The whole thing is the kind of tool that should be a single executable.</p>
+
+<h2>What it does</h2>
+<ul>
+    <li>Takes a natural-language description of a task.</li>
+    <li>Asks the model for the closest command and a one-line explanation.</li>
+    <li>Streams the response so the user is not waiting on a blank screen.</li>
+    <li>Lets the user copy or edit the command instead of executing it automatically.</li>
+</ul>
+<p>That last point is deliberate. An assistant that runs commands for you is a different product with a different risk profile. TAI is a command-recall tool. It suggests; the human decides.</p>
+
+<h2>The hard parts</h2>
+<p><strong>Shell differences.</strong> PowerShell and Bash are not the same language. A flag that is correct in one is a syntax error in the other. The prompt has to know which shell it is targeting, and the tool has to let the user be explicit when it cannot tell.</p>
+<p><strong>Quoting.</strong> A command that looks fine in prose can be dangerous when a path contains a space or a variable expands unexpectedly. The model is good at the shape of a command and inconsistent about quoting. Showing the command before running it is the simplest mitigation.</p>
+<p><strong>Safety.</strong> Destructive commands need a clear signal. Even in suggest-only mode, a model can produce <code>rm -rf</code> with a path the user did not mean. Highlighting risky patterns and refusing to auto-execute them is not optional.</p>
+<p><strong>Latency.</strong> A terminal tool has a higher latency bar than a chat window. If the answer takes five seconds, the user has already gone back to searching. Streaming helps, but the first token still has to arrive quickly. A smaller, faster model is often the right choice for this use case.</p>
+<p><strong>Context.</strong> The tool does not know the current directory, the shell, or the recent commands unless you tell it. Adding just enough context — shell, OS, maybe the last command — improves answers without turning the prompt into a transcript.</p>
+
+<h2>What I would change next</h2>
+<p>I would add a confirmation step that can optionally execute a command, but only after an explicit keypress and a risk check. I would add a small history file so repeated questions can be recalled. And I would add a per-shell prompt template instead of asking the model to infer the shell from the question.</p>
+<p>The broader lesson is that small tools are a good place to learn agent design. There is no orchestration graph to hide behind. The interesting questions — what context does the model need, what should it never do on its own, how fast does it need to be — are all visible in a few hundred lines.</p>
+</div>
+</article>
+</main>
+<footer><div class="footer-inner"><span class="footer-credit"><a href="/">nayan</a></span><div class="footer-links"><a href="https://github.com/NayanEupho" target="_blank" rel="noopener noreferrer">GitHub</a><a href="/contact.html">Contact</a></div></div></footer>
+<script src="/site.js"></script>
+</body>
+</html>

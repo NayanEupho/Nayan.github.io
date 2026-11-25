@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>From LLMs to agents: teaching the team — Nayan Modi</title>
+    <meta name="description" content="A practical internal session on agents, MCP servers, and skills, and what people actually needed to understand.">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="/styles/shared.css">
+    <link rel="stylesheet" href="/styles/site.css">
+    <link rel="stylesheet" href="/styles/content.css">
+    <script>(function(){var saved=localStorage.getItem("theme")||"dark";document.documentElement.setAttribute("data-theme",saved);})();</script>
+</head>
+<body>
+<div class="bg-canvas"><div class="bg-blob bg-blob-1"></div><div class="bg-blob bg-blob-2"></div><div class="bg-grain"></div></div>
+<header class="site-header"><a href="/" class="header-logo">nayan</a><div class="header-actions"><button class="theme-toggle" aria-label="Toggle theme"><svg class="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg><svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></button></div></header>
+<main>
+<article>
+<a href="/blog/" class="back">&larr; back to blog</a>
+<h1>From LLMs to agents: teaching the team</h1>
+<p class="post-meta">Teaching · MCP · Agents</p>
+<div class="post-content">
+<p>Tools are only useful if people know when to reach for them. I delivered an internal session called “From LLMs to AI Agents” for colleagues at IPR. The goal was not to turn everyone into an agent engineer. It was to give people a working mental model of what these systems can do, where they fail, and how to use them safely in daily work.</p>
+
+<h2>The outline</h2>
+<ol>
+    <li><strong>What an LLM is, briefly.</strong> A next-token predictor with a context window, not a database and not an oracle.</li>
+    <li><strong>Why a standalone model is not enough.</strong> It lacks organisational knowledge and can answer confidently from nothing.</li>
+    <li><strong>RAG.</strong> Retrieve evidence first, then generate. Show a real administrative question and the source passage the answer came from.</li>
+    <li><strong>Tools and the agent loop.</strong> The model proposes an action, the runtime executes it, the result goes back into context, repeat.</li>
+    <li><strong>MCP.</strong> A standard way to describe and call tools, so the agent runtime does not need a custom integration per system.</li>
+    <li><strong>Skills.</strong> Packaged instructions that tell an agent how to do a specific job well.</li>
+    <li><strong>Safety.</strong> Permissions, approvals, audit, and the difference between a suggestion and an action.</li>
+</ol>
+
+<h2>What resonated</h2>
+<p><strong>The demos mattered more than the definitions.</strong> Seeing a policy question answered with a link to the document was more convincing than any diagram. Seeing an agent stop and ask for approval before a destructive action made the safety model concrete.</p>
+<p><strong>People wanted the boundary, not the hype.</strong> The most common questions were about failure: What happens when it is wrong? Who is responsible? Can it see things I cannot? Those are the right questions, and they are easier to answer when the architecture is explicit about permissions and evidence.</p>
+<p><strong>“Agent” is a vague word.</strong> Some people meant a chat assistant, some meant an automation, some meant a tool-using loop. Naming the loop and the tools separately removed a lot of confusion.</p>
+
+<h2>What I would change</h2>
+<p>I would spend less time on model internals and more time on a single end-to-end task. A live walkthrough — question, retrieval, tool call, approval, answer — teaches more than three slides of terminology. I would also give people a small, safe sandbox to try rather than a presentation to watch.</p>
+<p>The session also changed how I think about internal tooling. Adoption depends on trust, and trust depends on visible evidence and reversible actions. A tool that shows its sources and asks before doing something irreversible will be used more than a clever one that does not.</p>
+</div>
+</article>
+</main>
+<footer><div class="footer-inner"><span class="footer-credit"><a href="/">nayan</a></span><div class="footer-links"><a href="https://github.com/NayanEupho" target="_blank" rel="noopener noreferrer">GitHub</a><a href="/contact.html">Contact</a></div></div></footer>
+<script src="/site.js"></script>
+</body>
+</html>

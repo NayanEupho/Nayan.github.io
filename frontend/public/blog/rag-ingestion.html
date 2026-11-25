@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG for admin work, part 1: ingestion — Nayan Modi</title>
+    <meta name="description" content="Turning administrative policy PDFs into retrievable chunks: Docling, chunking, metadata, embeddings, ChromaDB, and the ingestion problems that actually matter.">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="/styles/shared.css">
+    <link rel="stylesheet" href="/styles/site.css">
+    <link rel="stylesheet" href="/styles/content.css">
+    <script>(function(){var saved=localStorage.getItem("theme")||"dark";document.documentElement.setAttribute("data-theme",saved);})();</script>
+</head>
+<body>
+<div class="bg-canvas"><div class="bg-blob bg-blob-1"></div><div class="bg-blob bg-blob-2"></div><div class="bg-grain"></div></div>
+<header class="site-header"><a href="/" class="header-logo">nayan</a><div class="header-actions"><button class="theme-toggle" aria-label="Toggle theme"><svg class="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg><svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></button></div></header>
+<main>
+<article>
+<a href="/blog/" class="back">&larr; back to blog</a>
+<h1>RAG for admin work, part 1: ingestion</h1>
+<p class="post-meta">Part 1 of 2 · RAG · Ingestion</p>
+<div class="post-content">
+<p>At the Institute for Plasma Research, a lot of day-to-day life runs on policy documents: leave rules, LTC policy, GFR rules, IT usage, and a long tail of internal procedures. The documents exist, but finding the one paragraph that answers a question is slow. Keyword search is brittle because the person asking rarely uses the same words as the policy author.</p>
+<p>That is the problem the <a href="https://github.com/NayanEupho/RAG_Chat_IPRv1.5" target="_blank" rel="noopener noreferrer">RAG administrative assistant</a> was built to solve: ask a question in plain English, get an answer grounded in the actual documents, and keep every byte on-premise. This post is about the half of the system people skip in architecture diagrams — ingestion. <a href="/blog/rag-retrieval.html">Part 2 covers retrieval and generation.</a></p>
+
+<h2>The shape of the system</h2>
+<p>The prototype used Docling to parse PDFs, an <code>embeddinggemma:300m</code> model served by Ollama for embeddings, ChromaDB for vector storage, LangGraph for workflow orchestration, SQLite for session state, FastAPI for the API, and a Next.js/Bun chat UI. The generation model was <code>Qwen2.5:72b</code>, also served locally by Ollama on an NVIDIA A100.</p>
+<p>The ingestion path itself is short:</p>
+<ul>
+    <li>Load and parse policy PDFs.</li>
+    <li>Split the text into overlapping chunks.</li>
+    <li>Attach metadata that describes where each chunk came from.</li>
+    <li>Embed each chunk.</li>
+    <li>Store the vector and metadata in ChromaDB.</li>
+</ul>
+<p>Every hard problem is hiding in those five bullets.</p>
+
+<h2>Step 1: parsing PDFs is not reading text</h2>
+<p>A policy PDF is a layout document, not a text file. It has headers, footers, tables, numbered clauses, annexures, and occasionally a scanned page that is just an image. The lazy version of ingestion calls a text extractor and hopes for the best. That version produces chunks where the page number is glued to the middle of a sentence and a table becomes a vertical pile of words.</p>
+<p>We used Docling because it understands document structure well enough to preserve reading order and tables. Even then, parsing was the first source of bad retrieval. A few failure modes showed up immediately:</p>
+<ul>
+    <li><strong>Tables that carry the answer.</strong> Leave balances, pay bands, and eligibility matrices are often tables. If the parser flattens a table into meaningless lines, no embedding model can recover the relationship between columns.</li>
+    <li><strong>Repeated headers and footers.</strong> These become high-frequency noise. If every chunk contains the same footer, similarity search starts treating it as signal.</li>
+    <li><strong>Scanned annexures.</strong> Image-only pages need OCR. Without it, the chunk is empty or full of garbage, and the retriever silently loses a whole section.</li>
+    <li><strong>Multi-column layouts.</strong> Reading order matters. If the parser interleaves two columns, the answer reads like two sentences were shuffled together.</li>
+</ul>
+<p>The lesson: ingestion quality is a ceiling on answer quality. No prompt, reranker, or larger model fixes a chunk that never contained the answer in a readable form.</p>
+
+<h2>Step 2: chunking is a context decision</h2>
+<p>Chunking is usually described as a size parameter. In practice it is a decision about what context the model is allowed to see. Too small, and a clause loses the section heading that gives it meaning. Too large, and the embedding becomes an average of several topics, which makes it a poor match for any one of them.</p>
+<p>We split documents into overlapping chunks so that a rule spanning a boundary still appears intact in at least one chunk. Overlap is a cheap insurance policy, but it is not free: duplicated text increases index size and can make the retriever return the same content twice. Deduplication at retrieval time is part of the job.</p>
+<p>Two design choices mattered more than the exact token count:</p>
+<ul>
+    <li><strong>Keep structural context in the text.</strong> A chunk should still know which document, section, and subsection it belongs to. We carried that in metadata, and used the section path to reconnect chunks during retrieval.</li>
+    <li><strong>Store neighbour relationships.</strong> Each chunk got a <code>chunk_index</code>. If a retrieved chunk is cut in the middle of a rule, the retriever can pull <code>index - 1</code> and <code>index + 1</code> to restore a sliding window of context.</li>
+</ul>
+
+<h2>Step 3: metadata is the real retrieval feature</h2>
+<p>Vector similarity alone answers “what text looks like this query?” It does not answer “which document is this from?”, “which section is it in?”, or “what comes next?”. Metadata made the index usable as a document structure instead of a bag of vectors.</p>
+<p>Each embedding was stored with fields like document name, page number, section and subsection, chunk index, and the section path. That enabled three kinds of connection:</p>
+<ul>
+    <li><strong>Horizontal (sequential).</strong> <code>chunk_index</code> lets the retriever fetch neighbouring chunks when the answer is split across a boundary.</li>
+    <li><strong>Vertical (hierarchical).</strong> The section path lets the system group chunks from the same topic even when the text does not repeat the topic name. A chunk about “dependent eligibility” inherits meaning from its parent section on “LTC rules”.</li>
+    <li><strong>Cross-document.</strong> The filename lets a user target a specific document with an <code>@filename</code> mention, which immediately ignores millions of unrelated chunks.</li>
+</ul>
+<p>This is the part I would invest in first on a rebuild. Embeddings are commodity; a good metadata model is specific to the organisation and does more for answer quality than swapping embedding models.</p>
+
+<h2>Step 4: embeddings have to agree with each other</h2>
+<p>Ingestion and query time must use the same embedding model, with the same preprocessing, the same normalisation, and the same dimensions. This sounds obvious until the model gets upgraded on one side of the system. A new embedding model means a full re-index; there is no partial compatibility.</p>
+<p>We used <code>embeddinggemma:300m</code> locally. The small model kept ingestion cheap and made it realistic to re-embed a document collection on ordinary hardware. The trade-off is that a larger embedding model may separate near-duplicate policy language better. That is a decision to measure, not assume.</p>
+<p>Two practical details caused trouble:</p>
+<ul>
+    <li><strong>Batch size and timeouts.</strong> Embedding a large document one chunk at a time is slow. Batching helps, but a batch that times out leaves a partially indexed document.</li>
+    <li><strong>Index versioning.</strong> If the embedding model or chunking strategy changes, old vectors and new vectors must not be mixed. Each collection needs a version, and the application needs to know which one is current.</li>
+</ul>
+
+<h2>Step 5: ChromaDB is easy until documents change</h2>
+<p>ChromaDB handled persistence and approximate nearest-neighbour search without much ceremony, which is exactly what a prototype needs. The difficult part was not the database; it was keeping it consistent with the folder of PDFs.</p>
+<p>A WatchDog service watched an <code>upload_docs</code> folder and triggered re-indexing when documents were added or updated. That made the system feel automatic, but automation without idempotency is a bug factory:</p>
+<ul>
+    <li><strong>Re-running ingestion must not duplicate chunks.</strong> Chunks need stable IDs derived from document, page, and index, so an update replaces rather than appends.</li>
+    <li><strong>Deleting a document must delete its vectors.</strong> Otherwise the assistant keeps answering from a policy that no longer exists.</li>
+    <li><strong>Partial failures need a retry path.</strong> A crash halfway through a PDF cannot leave the collection in a state where half the document is searchable and the other half is missing.</li>
+    <li><strong>Updates need a version.</strong> The safest pattern is to build a new collection and switch an alias when it is complete, rather than mutating the live index in place.</li>
+</ul>
+
+<h2>What actually broke</h2>
+<p>Most of the debugging time went into a small number of unglamorous issues:</p>
+<ul>
+    <li><strong>Chunks without headings.</strong> A clause like “the same shall apply to dependents” is unanswerable without the section it belongs to. Injecting the section path into the chunk text fixed more queries than any prompt change.</li>
+    <li><strong>Tables treated as prose.</strong> The fix was structural: keep rows together, keep the column headers, and store the table context in metadata.</li>
+    <li><strong>Duplicate content.</strong> Overlap and repeated boilerplate produced near-duplicate hits. Deduplication by document and chunk index kept the context window useful.</li>
+    <li><strong>Stale answers.</strong> A policy update that only touched one page was not always re-indexed. File watching needs to compare content hashes, not just timestamps.</li>
+    <li><strong>Evaluation by vibes.</strong> Early on, “looks right” was the test. That does not scale. A small set of real administrative questions with known source passages is the only way to tell whether an ingestion change helped or hurt.</li>
+</ul>
+
+<h2>What I would do differently</h2>
+<p>I would build the evaluation set before the pipeline, not after. A spreadsheet of 30–50 real questions, each with the document and page that contains the answer, turns ingestion from guesswork into a measurable system. It also makes chunking decisions testable: change the chunk size, re-run the set, and compare recall at the chunk level.</p>
+<p>I would also treat ingestion as a versioned build artifact. Documents, parser version, chunker version, embedding model, and collection name should all be recorded together. When an answer is wrong six weeks later, the first question is which index produced it.</p>
+<p>Finally, I would keep the ingestion service separate from the chat service. Parsing and embedding are batch work; answering questions is interactive. Coupling them means a re-index can degrade the experience of someone asking a question at the same time.</p>
+
+<h2>Next</h2>
+<p>Ingestion gives you an index. It does not give you an answer. <a href="/blog/rag-retrieval.html">Part 2</a> covers the LangGraph retrieval path: routing, query rewriting, hybrid search, reranking, context assembly, streaming, and the failure modes that only appear once a real person starts asking questions.</p>
+</div>
+</article>
+</main>
+<footer><div class="footer-inner"><span class="footer-credit"><a href="/">nayan</a></span><div class="footer-links"><a href="https://github.com/NayanEupho" target="_blank" rel="noopener noreferrer">GitHub</a><a href="/contact.html">Contact</a></div></div></footer>
+<script src="/site.js"></script>
+</body>
+</html>

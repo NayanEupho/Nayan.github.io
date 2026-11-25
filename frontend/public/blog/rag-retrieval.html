@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG for admin work, part 2: retrieval and generation — Nayan Modi</title>
+    <meta name="description" content="Routing, query rewriting, hybrid retrieval, reranking, context assembly, streaming, and session state in a LangGraph RAG assistant.">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="/styles/shared.css">
+    <link rel="stylesheet" href="/styles/site.css">
+    <link rel="stylesheet" href="/styles/content.css">
+    <script>(function(){var saved=localStorage.getItem("theme")||"dark";document.documentElement.setAttribute("data-theme",saved);})();</script>
+</head>
+<body>
+<div class="bg-canvas"><div class="bg-blob bg-blob-1"></div><div class="bg-blob bg-blob-2"></div><div class="bg-grain"></div></div>
+<header class="site-header"><a href="/" class="header-logo">nayan</a><div class="header-actions"><button class="theme-toggle" aria-label="Toggle theme"><svg class="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg><svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></button></div></header>
+<main>
+<article>
+<a href="/blog/" class="back">&larr; back to blog</a>
+<h1>RAG for admin work, part 2: retrieval and generation</h1>
+<p class="post-meta">Part 2 of 2 · RAG · Retrieval · Generation</p>
+<div class="post-content">
+<p><a href="/blog/rag-ingestion.html">Part 1</a> ended with a searchable index. This part is about the other half: turning a human question into a grounded answer without letting the model invent policy. The implementation used LangGraph as an explicit state machine, ChromaDB for retrieval, a FlashRank cross-encoder for reranking, and Qwen2.5:72b served by Ollama for generation.</p>
+
+<h2>The graph, not a chain</h2>
+<p>A naive RAG pipeline is linear: embed the question, fetch top-k chunks, stuff them into a prompt, generate. That works for demos and fails on real conversations, because real questions are ambiguous, sometimes not questions about documents at all, and sometimes follow-ups that only make sense with the previous turn.</p>
+<p>The workflow was a small graph with four meaningful nodes:</p>
+<ul>
+    <li><strong>Router</strong> — decide whether this is a chat message or a knowledge-base question.</li>
+    <li><strong>Rewriter</strong> — resolve follow-ups and produce concrete search queries.</li>
+    <li><strong>Retriever</strong> — search, expand neighbours, rerank, and keep the best chunks.</li>
+    <li><strong>Generator</strong> — build the prompt and stream the answer.</li>
+</ul>
+<p>Edges encoded the paths: router to generator for chat, router to rewriter for knowledge questions, rewriter to retriever, retriever to generator, generator to end. The graph made the fallback and skip behaviour explicit instead of burying it in nested conditionals.</p>
+
+<h2>Routing: knowing when not to retrieve</h2>
+<p>Retrieval is not free. It costs an embedding call, a vector search, reranker time, and a larger prompt. More importantly, retrieving for a greeting produces irrelevant context and makes the model answer a question nobody asked. The router kept those messages out of the RAG path.</p>
+<p>It used two cheap signals:</p>
+<ul>
+    <li><strong>A heuristic filter</strong> for obvious chat such as “hi”, “thanks”, or “help”. This avoids a model call for the easiest cases.</li>
+    <li><strong>A zero-shot vector probe.</strong> The query was embedded and searched against the index. If the best distance was worse than a threshold, the router assumed the knowledge base probably did not contain the answer and sent the message to the chat path.</li>
+</ul>
+<p>The probe had a second benefit: the query embedding was passed forward to the retriever, so the same vector was not computed twice.</p>
+<p>The hard part was the threshold. Too strict, and real policy questions fall back to “I don’t know”. Too loose, and the assistant confidently answers from unrelated chunks. Distance thresholds are model-specific and data-specific; the only honest way to set one is to measure it against labelled questions. I would treat the threshold as a tunable configuration value, not a constant buried in code.</p>
+
+<h2>Rewriting: making the question searchable</h2>
+<p>“What about dependents?” means nothing on its own. In context, it might mean “what is the dependent eligibility rule under LTC?”. The rewriter node folded the last couple of human messages into the current one so pronouns and omitted subjects could be resolved.</p>
+<p>It also produced several concrete search queries instead of one. A single question often has multiple facets — eligibility, documents required, amount, approval authority — and one embedding tends to blur them. Multiple queries let the retriever search each facet separately and merge the results.</p>
+<p>The rewriter also handled explicit targeting. If the user wrote <code>@leave-policy.pdf</code>, the filename metadata was used to restrict retrieval to that document. That is a small feature with a large effect: it turns a vague question into a scoped one and avoids pulling similar clauses from unrelated policies.</p>
+<p>The risk is drift. A rewriter can over-interpret a short question and search for something the user never asked. Keeping the original question in the prompt and limiting the rewrite to the recent turns reduced that. Like the router threshold, rewrite behaviour is worth evaluating rather than assuming.</p>
+
+<h2>Retrieval: search, expand, rerank</h2>
+<p>Retrieval ran in three passes:</p>
+<ol>
+    <li><strong>Segmented search.</strong> Each rewritten query performed its own similarity search against ChromaDB. Candidates were merged and deduplicated by document and chunk index.</li>
+    <li><strong>Sliding window.</strong> For every strong hit, the retriever fetched <code>chunk_index - 1</code> and <code>chunk_index + 1</code>. This restored context when the answer crossed a chunk boundary, which happened constantly in numbered policy clauses.</li>
+    <li><strong>Reranking.</strong> The raw candidates — roughly the top 20 per query — were passed to a FlashRank cross-encoder. Only the best seven chunks survived.</li>
+</ol>
+<p>Why rerank at all? Embedding similarity is a coarse filter. It is good at getting a relevant neighbourhood and bad at ordering a small set precisely. A cross-encoder reads the query and the chunk together and scores relevance directly, which is much better at pushing the one paragraph that answers the question above paragraphs that merely share vocabulary.</p>
+<p>Reranking is also where latency lives. It is an extra model pass on every candidate. The trade-off is straightforward: more candidates improve recall, fewer candidates improve speed. Seven final chunks was a practical balance for the context window and the response time budget.</p>
+
+<h2>Context assembly: the prompt is a budget</h2>
+<p>After retrieval, the chunks were assembled into one context block with their metadata, then combined with system instructions, conversation history, and the user question. The prompt had to do three jobs at once: tell the model what it is allowed to answer from, tell it what to do when the documents do not contain the answer, and keep the answer readable.</p>
+<p>Three things mattered:</p>
+<ul>
+    <li><strong>Token budgeting.</strong> History, retrieved chunks, and instructions compete for the same context window. Without a budget, a long conversation quietly pushes out the retrieved evidence.</li>
+    <li><strong>Grounding instructions.</strong> The model was told to answer from the provided context, not from general knowledge. When the retrieved context was insufficient, the correct behaviour was “information not found”, not a plausible guess.</li>
+    <li><strong>Ordering.</strong> Models do not attend equally to every position in a long context. Putting the strongest chunks near the question and keeping the structure visible — document, section, page — made the evidence easier to use.</li>
+</ul>
+<p>Conflicting policies are a real edge case. Two documents can describe different versions of a rule. The system surfaces the conflict by keeping document metadata in context; it does not silently pick one. That is a product decision as much as a technical one.</p>
+
+<h2>Generation and streaming</h2>
+<p>Generation ran on Qwen2.5:72b through Ollama’s REST API on the local A100. The generator switched between a base chat prompt and an augmented RAG prompt depending on the router’s intent, and adjusted brevity based on query complexity.</p>
+<p>Responses were streamed to the UI with server-sent events. Streaming changes the feel of the product more than any prompt tweak: the user sees progress instead of a spinner, and the perceived latency drops even when total generation time does not.</p>
+<p>Streaming also complicates persistence. The answer arrives in pieces, so the session update has to happen after the stream completes, and a disconnected client must not leave a half-written message in the database. The final state transition in the graph was the point where the stream closed and persistence ran.</p>
+<p>On the serving side, Ollama was fine for a prototype but not the final answer for concurrency. We evaluated vLLM against Ollama on this workload. The vLLM path reduced worst-case time-to-first-token from 5.1 seconds to 2.7 seconds, which is the difference between “thinking” and “broken” when several people ask at once. That evaluation is covered in the <a href="/blog/ipr-dgx-inference.html">inference post</a>.</p>
+
+<h2>Sessions: state that survives a restart</h2>
+<p>SQLite stored sessions, conversation history, and the serialised LangGraph state. Every request carried a session id. On reconnect, the stored state was rehydrated into the graph, so the assistant remembered the conversation without leaking one user’s context into another’s.</p>
+<p>The schema was deliberately boring: sessions, messages, and workflow state. Boring is good here. The interesting problems were isolation and growth:</p>
+<ul>
+    <li><strong>Isolation.</strong> Session lookups must be scoped by id and validated on every request. A bug here is a data leak, not a UX issue.</li>
+    <li><strong>Growth.</strong> Conversation history cannot grow forever. Old turns need summarisation or truncation, and retrieved context should not be re-sent on every turn if it is unchanged.</li>
+    <li><strong>Migration.</strong> Serialised graph state is coupled to the code that produced it. A schema change needs a migration path or a version field.</li>
+</ul>
+
+<h2>What actually broke</h2>
+<ul>
+    <li><strong>False confidence on out-of-scope questions.</strong> The model answered from general knowledge when retrieval was weak. The fix was a stricter grounding prompt plus the router’s distance check, and accepting “not found” as a valid answer.</li>
+    <li><strong>Follow-up questions.</strong> Without rewriting, “and for contract staff?” searched for exactly those words and missed the parent rule. Rewriting fixed the common case and introduced the occasional over-interpretation.</li>
+    <li><strong>Near-duplicate chunks.</strong> Overlap and repeated clauses produced several versions of the same sentence, wasting context. Deduplication by chunk identity helped.</li>
+    <li><strong>Long context windows.</strong> More retrieved chunks is not always better. Beyond a point, extra chunks diluted the answer and increased latency. Reranking to a small, high-precision set was the better trade.</li>
+    <li><strong>Evaluation drift.</strong> Prompt changes that fixed one question broke another. Without a fixed question set and expected source passages, every change was a coin flip.</li>
+</ul>
+
+<h2>What I would build next</h2>
+<p>First, citations. The answer should point to the document, section, and page it used. That makes the system auditable and gives users a way to verify a claim instead of trusting the model.</p>
+<p>Second, an evaluation harness. A set of real questions with expected source chunks, measured at retrieval and at answer level, would turn tuning into engineering. It would also catch regressions when the embedding model, chunker, or prompt changes.</p>
+<p>Third, a cleaner serving boundary. vLLM behind an OpenAI-compatible proxy, with per-user keys and observability, is a better production shape than calling Ollama directly from the application. The <a href="/blog/ipr-dgx-inference.html">inference post</a> covers that side.</p>
+<p>The code for the project is on <a href="https://github.com/NayanEupho/RAG_Chat_IPRv1.5" target="_blank" rel="noopener noreferrer">GitHub</a>. The short version of both posts: retrieval quality is decided long before the model speaks. Good chunks, honest metadata, and a retrieval path that knows when to stop are most of the work.</p>
+</div>
+</article>
+</main>
+<footer><div class="footer-inner"><span class="footer-credit"><a href="/">nayan</a></span><div class="footer-links"><a href="https://github.com/NayanEupho" target="_blank" rel="noopener noreferrer">GitHub</a><a href="/contact.html">Contact</a></div></div></footer>
+<script src="/site.js"></script>
+</body>
+</html>

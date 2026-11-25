@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projects — Nayan Modi</title>
+    <meta name="description" content="Open-source projects by Nayan Modi, including agentic RAG, Kubernetes agents, and on-prem inference tooling.">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="/styles/shared.css">
+    <link rel="stylesheet" href="/styles/site.css">
+    <link rel="stylesheet" href="/styles/content.css">
+    <script>(function(){var saved=localStorage.getItem("theme")||"dark";document.documentElement.setAttribute("data-theme",saved);})();</script>
+</head>
+<body>
+<div class="bg-canvas"><div class="bg-blob bg-blob-1"></div><div class="bg-blob bg-blob-2"></div><div class="bg-grain"></div></div>
+<header class="site-header"><a href="/" class="header-logo">nayan</a><div class="header-actions"><button class="theme-toggle" aria-label="Toggle theme"><svg class="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg><svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></button></div></header>
+<main>
+<a href="/" class="back">&larr; back home</a>
+<div class="blog-header"><h1 class="blog-title">Projects</h1><p class="blog-subtitle">Things I have built, broken, measured, and learned from. Each card opens a short project note, with a link to the repository.</p></div>
+<div class="project-grid">
+    <a class="project-card" href="/projects/rag-chat-ipr.html"><h2>RAG_Chat_IPRv1.5</h2><p>IPR RAG Chat v1.5 | A state-of-the-art Agentic RAG ecosystem. Powered by LangGraph for intelligent workflow orchestration, FastAPI for high-speed streaming, and Ollama for local-first neural inference. Features a premium Next.js UI (Bun as JS runtime) with real-time @mentions, hierarchical document chunking, and deep session persistence.</p><div class="project-meta"><span>Python</span><span>★ 4</span></div></a>
+    <a class="project-card" href="/projects/agentic-devops.html"><h2>Agentic-DevOps</h2><p>An AI-powered DevOps assistant that lets you manage Docker and Kubernetes clusters using natural language. Built with Python, Ollama, and the Model Context Protocol (MCP).</p><div class="project-meta"><span>Python</span><span>★ 1</span></div></a>
+    <a class="project-card" href="/projects/ipr-vllm-inference.html"><h2>IPR-vLLM-Inference</h2><p>This repo maps the exact vLLM inference and proxy-ied via LiteLLM set up I have done at IPR for efficient and fast LLM inference on NVIDIA DGX1 GPU server node (8xA100 80 GB) for powering in-house and open-source agentic applications, along with a simple Streamlit dashboard for API key management.</p><div class="project-meta"><span>Python</span></div></a>
+    <a class="project-card" href="/projects/ipr-ollama-inference.html"><h2>IPR-ollama-infrence-</h2><p>This script details start-up orchestration for DGX1 (8xA100 80GB) for network-wide model access.</p><div class="project-meta"><span>Shell</span></div></a>
+    <a class="project-card" href="/projects/cuda-vs-vulkan-dgx1.html"><h2>CUDA-vs-Vulkan-on-Nvidia-DGX1-comparision</h2><p>A small comparison on running Ollama (llama.cpp) on CUDA vs Vulkan inference backend.</p><div class="project-meta"><span>Python</span></div></a>
+    <a class="project-card" href="/projects/devopsagent-cli.html"><h2>DevOpsAgent-cli</h2><p>Command-line based MCP implementation for the DevOps Agent project, giving the agent controlled native CLI access with guardrailing using an agent skill.md approach.</p><div class="project-meta"><span>Python</span></div></a>
+    <a class="project-card" href="/projects/tai-ai-agent.html"><h2>tai-AI-Agent</h2><p>tai is a lightweight terminal-based AI agent built in Go with Bubble Tea. It provides inline assistance for PowerShell and Bash commands, helping you quickly recall syntax, flags, and command usage without leaving your terminal or switching back to ChatGPT.</p><div class="project-meta"><span>Go</span></div></a>
+    <a class="project-card" href="/projects/alfresco-mcp-ipr.html"><h2>Alfresco-mcp-IPR-fork</h2><p>This is a fork of Alfresco MCP made as a small PoC for edms.ipr.res.in, showing how a document and workflow management system for internal institute-wide network access can connect agentic applications with an Alfresco-based EDMS.</p><div class="project-meta"><span>Python</span></div></a>
+    <a class="project-card" href="/projects/rest-vs-mcp.html"><h2>REST-vs-MCP</h2><p>A comprehensive benchmarking suite comparing REST API vs. Model Context Protocol (MCP) performance for AI agents, featuring network simulations and an interactive dashboard.</p><div class="project-meta"><span>Python</span></div></a>
+    <a class="project-card" href="/projects/voice-ai-agent-livekit.html"><h2>voice-ai-agent-LiveKit-</h2><p>A small voice AI agent made using LiveKit and hooked up with Voibiz for telephony with FireCrawl MCP for live web lookup.</p><div class="project-meta"><span>Python</span></div></a>
+    <a class="project-card" href="/projects/dograh-fork.html"><h2>dograh-fork</h2><p>A fork of dograh (open-source voice AI agent) that integrates voice-link as a telephony provider in it.</p><div class="project-meta"><span>Python</span></div></a>
+    <a class="project-card" href="/projects/cancer-prediction-ml.html"><h2>Cancer-Prediction-ML-Project</h2><p>In this project we use Kaggle's cancer dataset to train our model using three algorithms — Decision Tree, Random Forest, and Logistic Regression — and find the most suitable algorithm: Random Forest with an accuracy of 97.3%. Libraries used: numpy, matplotlib, pandas &amp; seaborn.</p><div class="project-meta"><span>Jupyter Notebook</span><span>★ 1</span></div></a>
+    <a class="project-card" href="/projects/ipr-rag-chat.html"><h2>IPR_RAG_Chat</h2><p>No description on GitHub yet.</p><div class="project-meta"><span>Python</span></div></a>
+    <a class="project-card" href="/projects/llm-containerization.html"><h2>LLM-Containerization</h2><p>Fine-tuning the LLaMA 2 language model using Ollama as the interface, and deploying the model in a containerized environment using Docker and Kubernetes. The goal is to create a scalable, efficient, and easily manageable infrastructure for large language models (LLMs).</p><div class="project-meta"><span>Python</span></div></a>
+    <a class="project-card" href="/projects/llama-optimized-project.html"><h2>LLama-Optimized-Project</h2><p>No description on GitHub yet.</p><div class="project-meta"><span>Python</span></div></a>
+    <a class="project-card" href="/projects/llama-fine-tuned-expl.html"><h2>LLaMA_fine_tuned_expl-Model</h2><p>A finely tuned LLaMA (Large Language Model with adaptability) model, tailored to generate comprehensive and insightful explanations for a wide range of input topics, leveraging the power of state-of-the-art language understanding.</p><div class="project-meta"><span>Python</span></div></a>
+    <a class="project-card" href="/projects/github-graphql-issue-labels.html"><h2>GitHub-GraphQL-issue-label-Automation</h2><p>No description on GitHub yet.</p><div class="project-meta"><span>JavaScript</span></div></a>
+    <a class="project-card" href="/projects/jnotebook-denokv.html"><h2>JNotebook_denoKV</h2><p>No description on GitHub yet.</p><div class="project-meta"><span>No primary language</span></div></a>
+    <a class="project-card" href="/projects/nayan-denokv.html"><h2>Nayan-denoKV</h2><p>No description on GitHub yet.</p><div class="project-meta"><span>JavaScript</span></div></a>
+    <a class="project-card" href="/projects/deno-kv-database-js-prac.html"><h2>Deno-KV-Database-JS-Prac</h2><p>No description on GitHub yet.</p><div class="project-meta"><span>JavaScript</span></div></a>
+    <a class="project-card" href="/projects/graphql-practice.html"><h2>GraphQL_Practice</h2><p>No description on GitHub yet.</p><div class="project-meta"><span>No primary language</span></div></a>
+    <a class="project-card" href="/projects/staytunned-js-github-api.html"><h2>StayTunned-JS-Github-API-Prac</h2><p>No description on GitHub yet.</p><div class="project-meta"><span>JavaScript</span></div></a>
+    <a class="project-card" href="/projects/deal-comparator-v1.html"><h2>Deal-Comparator-v1</h2><p>With the aid of this, users will be able to see deals from various platforms at a single place rather than visiting different food ordering apps one by one. Users can search according to price, ratings, discounts, delivery time &amp; get the best possible deals.</p><div class="project-meta"><span>Jupyter Notebook</span></div></a>
+    <a class="project-card" href="/projects/deal-comparator.html"><h2>Deal-Comparator</h2><p>Deal Comparator.</p><div class="project-meta"><span>No primary language</span></div></a>
+    <a class="project-card" href="/projects/notice-hub.html"><h2>Notice_Hub_Project</h2><p>Notice Hub mini project created during the 15-day internship at CREART.</p><div class="project-meta"><span>Python</span></div></a>
+    <a class="project-card" href="/projects/spam-detection-ml.html"><h2>Spam-Detection-ML-Model</h2><p>This spam message detection model was created using NLTK and sklearn. This project was created by me and my mentor (Harsh Rajput), where I did the data cleaning &amp; text preprocessing and Harsh bhaiya did model training and accuracy analysis of the model.</p><div class="project-meta"><span>Jupyter Notebook</span></div></a>
+    <a class="project-card" href="/projects/movie-recommender-engine.html"><h2>Movie-Recommender-Engine</h2><p>In this project we used TMDB's movie dataset of 5,000 movies to create a content-based movie recommender system using cosine similarity, and also created a website for it using Streamlit, hosted on Heroku.</p><div class="project-meta"><span>Jupyter Notebook</span></div></a>
+    <a class="project-card" href="/projects/thur-trivia-week-3.html"><h2>Thur-Trivia-week-3</h2><p>No description on GitHub yet.</p><div class="project-meta"><span>Kotlin</span></div></a>
+    <a class="project-card" href="/projects/my-app-modifier.html"><h2>My_App_Modifier</h2><p>App.</p><div class="project-meta"><span>Kotlin</span></div></a>
+    <a class="project-card" href="/projects/app-row-col.html"><h2>AppRowCol</h2><p>App.</p><div class="project-meta"><span>Kotlin</span></div></a>
+    <a class="project-card" href="/projects/image-card-app.html"><h2>Image-Card-App</h2><p>No description on GitHub yet.</p><div class="project-meta"><span>Kotlin</span></div></a>
+    <a class="project-card" href="/projects/thurtrivia.html"><h2>ThurTrivia</h2><p>No description on GitHub yet.</p><div class="project-meta"><span>Kotlin</span></div></a>
+    <a class="project-card" href="/projects/web-app.html"><h2>Web-app</h2><p>Create an .exe file for Ubuntu.</p><div class="project-meta"><span>Fork</span><span>No primary language</span></div></a>
+</div>
+</main>
+<footer><div class="footer-inner"><span class="footer-credit"><a href="/">nayan</a></span><div class="footer-links"><a href="https://github.com/NayanEupho" target="_blank" rel="noopener noreferrer">GitHub</a><a href="/contact.html">Contact</a></div></div></footer>
+<script src="/site.js"></script>
+</body>
+</html>

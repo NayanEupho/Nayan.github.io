@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REST vs MCP: what actually costs time — Nayan Modi</title>
+    <meta name="description" content="A benchmark of REST and the Model Context Protocol for agent tool calls, and where the overhead really comes from.">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="/styles/shared.css">
+    <link rel="stylesheet" href="/styles/site.css">
+    <link rel="stylesheet" href="/styles/content.css">
+    <script>(function(){var saved=localStorage.getItem("theme")||"dark";document.documentElement.setAttribute("data-theme",saved);})();</script>
+</head>
+<body>
+<div class="bg-canvas"><div class="bg-blob bg-blob-1"></div><div class="bg-blob bg-blob-2"></div><div class="bg-grain"></div></div>
+<header class="site-header"><a href="/" class="header-logo">nayan</a><div class="header-actions"><button class="theme-toggle" aria-label="Toggle theme"><svg class="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg><svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></button></div></header>
+<main>
+<article>
+<a href="/blog/" class="back">&larr; back to blog</a>
+<h1>REST vs MCP: what actually costs time</h1>
+<p class="post-meta">MCP · Benchmarking · Agents</p>
+<div class="post-content">
+<p>When an agent calls a tool, two things happen: the model decides what to call, and the runtime performs the call. Most discussions about REST versus the Model Context Protocol (MCP) blur those together. The model-side cost is tokens and reasoning. The runtime-side cost is network, serialisation, and connection setup. They are different problems.</p>
+<p>I built <a href="https://github.com/NayanEupho/REST-vs-MCP" target="_blank" rel="noopener noreferrer">REST-vs-MCP</a> to measure the runtime side with a fair comparison: the same operations exposed both ways, network conditions simulated, and a dashboard for the results.</p>
+
+<h2>What each option is good at</h2>
+<p><strong>REST</strong> is the default because everything speaks it. It has mature tooling, caching, proxies, auth, and a mental model every engineer already has. For a single service, it is usually the shortest path.</p>
+<p><strong>MCP</strong> adds a protocol designed for tools: discovery, schemas, and a standard way for a host to talk to a server. The value is not raw speed. It is that an agent can discover what a server offers and call it without bespoke glue for every integration.</p>
+<p>So the honest question is not “which is faster?”. It is “which overhead are you willing to pay?”.</p>
+
+<h2>The benchmark</h2>
+<p>The suite performed comparable operations over both transports and recorded latency, payload size, and connection behaviour under different network conditions. The details are in the repository; the useful part is where the time goes.</p>
+<ul>
+    <li><strong>Connection setup.</strong> A fresh connection is expensive. A persistent session amortises it. If the agent makes one call, that setup is a large fraction of the total; if it makes fifty, it disappears.</li>
+    <li><strong>Schema and discovery.</strong> MCP can tell the agent what tools exist and what arguments they take. That is valuable, but the schema still has to be sent or loaded, and it consumes context on the model side.</li>
+    <li><strong>Framing.</strong> JSON-RPC adds a little envelope around each call. For large payloads it is noise; for many tiny calls it adds up.</li>
+    <li><strong>Streaming and concurrency.</strong> A protocol that handles long-running calls and streams well is worth more than a few milliseconds of framing when the tool is slow.</li>
+</ul>
+
+<h2>Where REST wins</h2>
+<p>REST wins when the integration is known at build time, the calls are simple, and the infrastructure already exists. It also wins on debuggability: a curl command and a browser are often enough. If an agent calls one internal endpoint, wrapping it in a protocol adds a layer without adding much.</p>
+
+<h2>Where MCP wins</h2>
+<p>MCP wins when the tool surface is broad and changing, when several hosts need to talk to several servers, and when discovery matters. A document system, a cluster, and a database all expose different tools. A standard protocol means the agent runtime does not need a new integration for each one.</p>
+<p>The token cost is the trade-off people underestimate. Every tool schema is context. A server with fifty tools can spend a meaningful part of the window describing itself before the model does any work. Tool selection and schema pruning become part of the design.</p>
+
+<h2>What I took away</h2>
+<ul>
+    <li><strong>Measure the workload, not the protocol.</strong> A benchmark of one call is a benchmark of connection setup.</li>
+    <li><strong>Separate model cost from runtime cost.</strong> The protocol does not control how many tokens the model spends deciding.</li>
+    <li><strong>Keep the tool surface small.</strong> Fewer, clearer tools beat a large catalogue, in both protocols.</li>
+    <li><strong>Persist connections where possible.</strong> It is the single biggest runtime win in both cases.</li>
+</ul>
+<p>The code and dashboard are in <a href="https://github.com/NayanEupho/REST-vs-MCP" target="_blank" rel="noopener noreferrer">REST-vs-MCP</a>.</p>
+</div>
+</article>
+</main>
+<footer><div class="footer-inner"><span class="footer-credit"><a href="/">nayan</a></span><div class="footer-links"><a href="https://github.com/NayanEupho" target="_blank" rel="noopener noreferrer">GitHub</a><a href="/contact.html">Contact</a></div></div></footer>
+<script src="/site.js"></script>
+</body>
+</html>

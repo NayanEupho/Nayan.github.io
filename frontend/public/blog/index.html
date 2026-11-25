@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog — Nayan Modi</title>
+    <meta name="description" content="Notes on building agents, retrieval, and on-prem inference systems.">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="/styles/shared.css">
+    <link rel="stylesheet" href="/styles/site.css">
+    <link rel="stylesheet" href="/styles/content.css">
+    <script>(function(){var saved=localStorage.getItem("theme")||"dark";document.documentElement.setAttribute("data-theme",saved);})();</script>
+</head>
+<body>
+<div class="bg-canvas"><div class="bg-blob bg-blob-1"></div><div class="bg-blob bg-blob-2"></div><div class="bg-grain"></div></div>
+<header class="site-header"><a href="/" class="header-logo">nayan</a><div class="header-actions"><button class="theme-toggle" aria-label="Toggle theme"><svg class="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg><svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></button></div></header>
+<main>
+<a href="/" class="back">&larr; back home</a>
+<div class="blog-header"><h1 class="blog-title">Blog</h1><p class="blog-subtitle">Notes from building agents, retrieval, and inference systems.</p></div>
+<div class="blog-list">
+    <article class="blog-post"><h2><a class="blog-post-title" href="/blog/rag-ingestion.html">RAG for admin work, part 1: ingestion</a></h2><p class="blog-desc">From policy PDFs to retrievable chunks — parsing, chunking, metadata, embeddings, and the ingestion problems nobody warns you about.</p><div class="blog-tags"><span class="tag">RAG</span><span class="tag">Ingestion</span><span class="tag">ChromaDB</span></div></article>
+    <article class="blog-post"><h2><a class="blog-post-title" href="/blog/rag-retrieval.html">RAG for admin work, part 2: retrieval and generation</a></h2><p class="blog-desc">Routing, query rewriting, hybrid search, reranking, and grounding answers in policy documents with LangGraph.</p><div class="blog-tags"><span class="tag">RAG</span><span class="tag">Retrieval</span><span class="tag">LangGraph</span></div></article>
+    <article class="blog-post"><h2><a class="blog-post-title" href="/blog/agentic-kubernetes-rbac.html">Letting Kubernetes RBAC do the hard work</a></h2><p class="blog-desc">How service accounts let an agent inherit cluster permissions, and why that keeps future maintenance small.</p><div class="blog-tags"><span class="tag">Kubernetes</span><span class="tag">RBAC</span><span class="tag">Agents</span></div></article>
+    <article class="blog-post"><h2><a class="blog-post-title" href="/blog/ipr-dgx-inference.html">Running LLMs on an 8×A100 DGX-1</a></h2><p class="blog-desc">vLLM, LiteLLM, VRAM pressure, and the CUDA 12.2 → 13.1 upgrade that had to keep existing jobs alive.</p><div class="blog-tags"><span class="tag">Inference</span><span class="tag">vLLM</span><span class="tag">CUDA</span></div></article>
+    <article class="blog-post"><h2><a class="blog-post-title" href="/blog/lora-qlora-qwen.html">LoRA, QLoRA, and a mixture of adapters</a></h2><p class="blog-desc">Fine-tuning Qwen 3.5 9B on administrative Q&amp;A, then serving many adapters from one base model.</p><div class="blog-tags"><span class="tag">Fine-tuning</span><span class="tag">LoRA</span><span class="tag">Qwen</span></div></article>
+    <article class="blog-post"><h2><a class="blog-post-title" href="/blog/tai-terminal-ai.html">TAI: a small terminal agent in Go</a></h2><p class="blog-desc">Reducing command-hunting friction without leaving the terminal, and what I would change next.</p><div class="blog-tags"><span class="tag">Go</span><span class="tag">CLI</span><span class="tag">Agents</span></div></article>
+    <article class="blog-post"><h2><a class="blog-post-title" href="/blog/rest-vs-mcp.html">REST vs MCP: what actually costs time</a></h2><p class="blog-desc">A benchmark of two ways for agents to call tools, with network simulation and a dashboard.</p><div class="blog-tags"><span class="tag">MCP</span><span class="tag">Benchmarking</span><span class="tag">Agents</span></div></article>
+    <article class="blog-post"><h2><a class="blog-post-title" href="/blog/alfresco-mcp.html">Wrapping Alfresco in an MCP server</a></h2><p class="blog-desc">Turning a document and workflow management API into tools an agent can safely test against.</p><div class="blog-tags"><span class="tag">Alfresco</span><span class="tag">MCP</span><span class="tag">Documents</span></div></article>
+    <article class="blog-post"><h2><a class="blog-post-title" href="/blog/from-llms-to-agents.html">From LLMs to agents: teaching the team</a></h2><p class="blog-desc">A practical session on agents, MCP servers, and skills, plus the questions that came up.</p><div class="blog-tags"><span class="tag">Teaching</span><span class="tag">MCP</span><span class="tag">Agents</span></div></article>
+</div>
+</main>
+<footer><div class="footer-inner"><span class="footer-credit"><a href="/">nayan</a></span><div class="footer-links"><a href="https://github.com/NayanEupho" target="_blank" rel="noopener noreferrer">GitHub</a><a href="/contact.html">Contact</a></div></div></footer>
+<script src="/site.js"></script>
+</body>
+</html>

@@ -1,29 +1,39 @@
-# ni5arga clone
+# Nayan Modi — personal website
 
-Pixel-focused static clone of `https://ni5arga.com/` with the home page, blog index, and the `hacking-ccd` article route.
+A small personal site with static HTML pages for the homepage, blog, projects, and
+contact form. The only backend work is receiving contact-form submissions and
+emailing the site owner.
 
-See [USAGE.md](USAGE.md) for complete Bun and Docker installation, startup,
-shutdown, environment, and troubleshooting instructions.
+## Structure
 
-## Local
+```text
+frontend/public/       static HTML, CSS, JS, and images
+frontend/server.ts     static file server + /api/contact proxy
+backend/server.ts      contact API (nodemailer)
+```
 
-Create your private environment file and set a password of at least 8 characters:
+Blog and project pages are plain HTML. There is no CMS, no markdown renderer, and
+no database. Contact messages are delivered by email only.
+
+## Local development
+
+Create a private environment file and set the Gmail app password:
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-Edit `.env` to set `ADMIN_PASSWORD`. Bun loads this file automatically. The file
-is ignored by Git, so changing the value and restarting the backend rotates the
-admin password without changing source code.
+Edit `.env` and set `SMTP_USER` and `SMTP_PASS`. Gmail requires an app password.
+`CONTACT_TO` defaults to `nayanmodicd@gmail.com`.
 
-Run the backend API:
+Install dependencies, then start the backend:
 
 ```powershell
+bun install
 bun backend/server.ts
 ```
 
-Run the frontend:
+In a second terminal, start the frontend:
 
 ```powershell
 $env:API_URL = "http://localhost:3001"
@@ -38,13 +48,17 @@ Open `http://localhost:3000`.
 docker compose up --build
 ```
 
-Compose reads `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`, and `APP_ORIGIN` from
-the root `.env` file. There is no default admin password; startup fails when the
-password is missing or shorter than 8 characters.
-
 Services:
 
 - `frontend`: Bun static server on `localhost:3000`
-- `backend`: Bun API server on internal port `3001`
-- `database`: Alpine SQLite holder sharing the `sqlite-data` volume
-- Admin UI: `http://localhost:3000/admin`
+- `backend`: Bun contact API on internal port `3001`
+
+The contact endpoint returns `503` until `SMTP_USER` and `SMTP_PASS` are set.
+
+## Pages
+
+- Home: `/`
+- Blog: `/blog/`
+- Projects: `/projects/`
+- Contact: `/contact.html`
+- Health: `/health`

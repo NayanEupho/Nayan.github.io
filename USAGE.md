@@ -1,302 +1,139 @@
 # Website Usage Guide
 
-This project can run directly with Bun or as a Docker Compose stack. Choose one
-method at a time so both methods do not compete for ports `3000` and `3001`.
+The site runs either directly with Bun or as a Docker Compose stack. Choose one
+method at a time so both do not compete for ports `3000` and `3001`.
 
 ## URLs
 
-Once started, the application is available at:
-
-- Website: `http://localhost:3000`
+- Homepage: `http://localhost:3000`
 - Blog: `http://localhost:3000/blog/`
-- Admin: `http://localhost:3000/admin`
+- Projects: `http://localhost:3000/projects/`
+- Contact: `http://localhost:3000/contact.html`
 - Health check: `http://localhost:3000/health`
 
-## Environment Setup
+## Environment
 
-The backend will not start without an admin password of at least 8 characters.
-The private `.env` file is ignored by Git.
-
-If `.env` does not exist, create it from the example while in the repository root:
+Create `.env` from the example:
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-On macOS or Linux:
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` and set these values:
+Set the Gmail SMTP values:
 
 ```dotenv
-ADMIN_PASSWORD=replace-with-a-password-of-at-least-8-characters
-ADMIN_SESSION_SECRET=replace-with-a-long-random-secret
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_SECURE=true
+SMTP_USER=nayanmodicd@gmail.com
+SMTP_PASS=replace-with-a-google-app-password
+CONTACT_TO=nayanmodicd@gmail.com
 APP_ORIGIN=http://localhost:3000
 ```
 
-- `ADMIN_PASSWORD` is the password used at `/admin`.
-- `ADMIN_SESSION_SECRET` signs login sessions. Keep it different from the password.
-- `APP_ORIGIN` must exactly match the website origin. Use the public HTTPS origin
-  in production, without a trailing slash.
+`SMTP_PASS` must be a Google App Password, not the normal Gmail password. Until
+it is set, the contact form returns `503` and the message is not sent.
 
-Restart the backend after changing `.env`. Changing `ADMIN_SESSION_SECRET` signs
-out all existing admin sessions.
+## Option 1: Run with Bun
 
-## Option 1: Run With Bun
-
-### Requirements
-
-- Bun
-- Two terminal windows
-
-The project currently has no third-party npm packages and no `package.json`.
-There is therefore no `bun install` or `npm install` step. Bun itself provides
-the HTTP runtime and all APIs used by the project.
-
-### Install Bun
-
-Windows PowerShell:
+Install dependencies once:
 
 ```powershell
-powershell -c "irm bun.sh/install.ps1|iex"
+bun install
 ```
 
-macOS or Linux:
-
-```bash
-curl -fsSL https://bun.com/install | bash
-```
-
-Linux also needs `unzip` for the Bun installer. For Debian or Ubuntu:
-
-```bash
-sudo apt update
-sudo apt install unzip
-```
-
-Open a new terminal and verify the installation:
-
-```powershell
-bun --version
-```
-
-### Start the Backend
-
-Open a terminal in the repository root:
+Start the backend in one terminal:
 
 ```powershell
 bun backend/server.ts
 ```
 
-The backend listens on `http://localhost:3001`. Run the command from the
-repository root so Bun loads the root `.env` file.
-
-### Start the Frontend
-
-Open a second terminal in the repository root.
-
-Windows PowerShell:
+Start the frontend in another terminal:
 
 ```powershell
 $env:API_URL = "http://localhost:3001"
 bun frontend/server.ts
 ```
 
-macOS or Linux:
+Open `http://localhost:3000`.
 
-```bash
-API_URL=http://localhost:3001 bun frontend/server.ts
-```
+For automatic restarts while editing TypeScript, use `bun --watch` on either
+server. HTML and CSS changes under `frontend/public` only need a browser refresh.
 
-The frontend listens on `http://localhost:3000` and proxies dynamic requests to
-the backend.
-
-### Development Watch Mode
-
-For automatic server restarts while editing TypeScript, use these commands in
-separate terminals:
-
-```powershell
-bun --watch backend/server.ts
-```
-
-```powershell
-$env:API_URL = "http://localhost:3001"
-bun --watch frontend/server.ts
-```
-
-Changes to files in `frontend/public` are served directly and normally need only
-a browser refresh.
-
-### Stop Bun Servers
-
-Press `Ctrl+C` in both terminal windows.
-
-## Option 2: Run With Docker
-
-### Requirements
-
-- Docker Desktop with the Linux container engine running
-- Docker Compose, included with Docker Desktop
-
-Install Docker Desktop from the official Docker documentation and start it before
-running Compose. Verify both commands work:
-
-```powershell
-docker version
-docker compose version
-```
-
-Bun does not need to be installed on the host for this method. The frontend and
-backend images include Bun, and the database image installs SQLite.
-
-### Build and Start
-
-From the repository root:
+## Option 2: Run with Docker
 
 ```powershell
 docker compose up --build -d
 ```
 
-Compose reads the root `.env` file automatically. It starts:
+Compose reads `.env` from the repository root and starts:
 
 - `frontend` on host port `3000`
 - `backend` on internal port `3001`
-- `database` with a persistent SQLite volume
 
-The current publishing implementation stores site and post content under
-`content`; the SQLite service is initialized for the container architecture but
-does not currently hold blog or admin records.
-
-### CMS Content and Git
-
-Admin-managed posts are runtime data and are intentionally ignored by Git:
-
-- `content/blog/` contains the Markdown source, draft state, and uploaded assets.
-- `frontend/public/blog/` and `frontend/public/projects/` contain generated public HTML.
-
-Back up `content/blog/` separately. It is the source of truth for both published
-posts and saved drafts. The two public directories can be regenerated from that
-source and do not need a separate backup.
-
-Because this content is ignored, a clean Git clone starts with an empty post
-library unless a `content/blog/` backup is restored. Do not use `git clean -fdx`
-in a working deployment because it can delete ignored CMS content.
-
-Check service status and health:
+Check status and logs:
 
 ```powershell
 docker compose ps
+docker compose logs -f frontend backend
 ```
 
-Follow logs:
-
-```powershell
-docker compose logs -f frontend backend database
-```
-
-### Rebuild After Code Changes
-
-```powershell
-docker compose up --build -d
-```
-
-For a clean container recreation without deleting content or the SQLite volume:
-
-```powershell
-docker compose up --build -d --force-recreate
-```
-
-### Stop Docker Services
-
-Stop and remove the containers and network:
+Stop the stack:
 
 ```powershell
 docker compose down
 ```
 
-The named SQLite volume remains available for the next start.
+Containers keep no persistent data; contact messages are delivered by email.
 
-To also delete the named volume, use the following only when its stored data is
-no longer needed:
+## Editing Content
 
-```powershell
-docker compose down --volumes
-```
+Blog posts and project cards are plain HTML:
 
-This does not delete blog files under `content`, which are bind-mounted from the
-repository.
+- `frontend/public/blog/index.html` — blog listing
+- `frontend/public/blog/*.html` — individual posts
+- `frontend/public/projects/index.html` — project cards
+- `frontend/public/projects/*.html` — individual project pages
 
-## Verify the Installation
+Project cards open a local project page, not GitHub directly. Each project page
+has a short description and a "View on GitHub" button.
 
-PowerShell:
+Add a new page by creating an HTML file and linking it from the listing. No build
+step is required.
 
-```powershell
-Invoke-RestMethod http://localhost:3000/health
-```
+## Contact Form
 
-Expected response:
-
-```json
-{"ok":true}
-```
-
-macOS or Linux:
-
-```bash
-curl http://localhost:3000/health
-```
-
-Then open `http://localhost:3000/admin` and sign in with the `ADMIN_PASSWORD`
-from `.env`.
+The form posts JSON to `/api/contact`. The backend validates the fields, rate
+limits by IP, and sends the email. The browser never talks to SMTP directly.
 
 ## Troubleshooting
 
-### Port 3000 or 3001 Is Already in Use
+### Contact form says the email is not configured
 
-Stop the other Bun process or Docker stack before starting another method:
+Set `SMTP_USER` and `SMTP_PASS` in `.env` and restart the backend or containers.
+
+### Gmail rejects the login
+
+Use a Google App Password. Two-factor authentication must be enabled on the
+Google account before an app password can be created.
+
+### Port 3000 or 3001 is already in use
+
+Stop the other Bun process or Docker stack:
 
 ```powershell
 docker compose down
 ```
 
-On Windows, inspect listeners with:
+Inspect listeners:
 
 ```powershell
 Get-NetTCPConnection -State Listen -LocalPort 3000,3001
 ```
 
-### Backend Rejects the Password Configuration
-
-Ensure `.env` is in the repository root and `ADMIN_PASSWORD` contains at least
-8 characters. Start Bun commands from the repository root, then restart the
-backend.
-
-### Docker Cannot Connect to the Engine
-
-Start Docker Desktop and wait until the Linux engine reports that it is running.
-Then retry:
-
-```powershell
-docker compose up --build -d
-```
-
-### Admin Writes Return `Invalid request origin`
-
-Set `APP_ORIGIN` to the exact origin shown in the browser address bar. For local
-use, it should normally be:
-
-```dotenv
-APP_ORIGIN=http://localhost:3000
-```
-
-Restart the backend after changing it.
-
-## Official Installation References
+## Official References
 
 - Bun installation: https://bun.com/docs/installation
 - Docker Desktop for Windows: https://docs.docker.com/desktop/setup/install/windows-install/
 - Docker Compose installation: https://docs.docker.com/compose/install/
+- Google App Passwords: https://support.google.com/accounts/answer/185833
