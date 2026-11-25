@@ -15,14 +15,16 @@
 }
 
 .home-page .avatar {
+    display: block;
     width: 92px;
     height: 92px;
     border-radius: 50%;
     object-fit: cover;
+    object-position: 44% 35%;
     border: 3px solid var(--bg-secondary);
     box-shadow: 0 0 0 1px var(--border), var(--shadow-lg);
     transition: transform var(--transition-spring), box-shadow var(--transition-spring);
-    margin-bottom: 24px;
+    margin: 0 auto 24px;
 }
 
 .home-page .avatar:hover {
