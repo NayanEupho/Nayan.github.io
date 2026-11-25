@@ -61,6 +61,8 @@
 
 .hero-bio:last-of-type { margin-bottom: 28px; }
 
+.nowrap { white-space: nowrap; }
+
 .hero-bio a,
 .post-content a,
 .project a {
