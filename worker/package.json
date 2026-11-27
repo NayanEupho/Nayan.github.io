@@ -1,0 +1,7 @@
+{
+  "name": "contact-worker",
+  "private": true,
+  "dependencies": {
+    "worker-mailer": "latest"
+  }
+}

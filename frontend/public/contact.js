@@ -1,5 +1,9 @@
 const form = document.querySelector("[data-contact-form]");
 const status = document.querySelector("[data-contact-status]");
+const isLocal = location.hostname === "localhost" || location.hostname === "127.0.0.1";
+const contactEndpoint = isLocal
+  ? "/api/contact"
+  : "https://contact.nayanmodicd.workers.dev/api/contact";
 
 function setStatus(message, kind = "") {
   if (!status) return;
@@ -16,7 +20,7 @@ form?.addEventListener("submit", async (event) => {
   setStatus("Sending...");
 
   try {
-    const response = await fetch("/api/contact", {
+    const response = await fetch(contactEndpoint, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(payload),

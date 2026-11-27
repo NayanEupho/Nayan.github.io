@@ -1,0 +1,6 @@
+{
+  "name": "contact",
+  "main": "contact.ts",
+  "compatibility_date": "2026-11-23",
+  "compatibility_flags": ["nodejs_compat"]
+}
